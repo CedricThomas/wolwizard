@@ -1,0 +1,44 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./cmd/web/Dockerfile
+    depends_on:
+      - redis
+    ports:
+      - "8080:8080"
+    env_file: 
+      - ".env"
+      - "./cmd/web/.env"
+  pc-agent:
+    build:
+      context: .
+      dockerfile: ./cmd/pc-agent/Dockerfile
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    env_file: 
+      - ".env"
+      - "./cmd/pc-agent/.env"
+  raspberry-agent:
+    build:
+      context: .
+      dockerfile: ./cmd/raspberry-agent/Dockerfile
+    depends_on:
+      - redis
+    env_file: 
+      - ".env"
+      - "./cmd/raspberry-agent/.env"
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    env_file: 
+      - ".env"
+    command: >
+      sh -c "echo 'user $$REDIS_USER on >$$REDIS_PASSWORD ~* +@all' > /tmp/users.acl && redis-server --aclfile /tmp/users.acl"
+    volumes:
+      - redis-data:/data
+volumes:
+  redis-data:
