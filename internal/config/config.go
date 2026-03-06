@@ -1,21 +1,37 @@
 package config
 
 import (
-	"log"
+	"fmt"
+	"net"
 
 	"github.com/caarlos0/env/v11"
 )
 
 type Config struct {
-	RedisURL         string `env:"REDIS_URL,required"`
-	ServerMACAddress string `env:"SERVER_MAC_ADDRESS,required"`
+	RedisURL                string           `env:"REDIS_URL,required"`
+	ServerMACAddressStr     string           `env:"SERVER_MAC_ADDRESS,required"`
+	ServerMACAddress        net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
+	ServerNetworkAddressStr string           `env:"SERVER_NETWORK_ADDRESS,required"`
+	ServerNetworkAddress    *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
 }
 
 // New creates a new Config instance with values from the environment
 func New() (*Config, error) {
 	var cfg Config
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("failed to process env vars: %v", err)
+	var err error
+	if err = env.Parse(&cfg); err != nil {
+		return nil, fmt.Errorf("failed to process env vars: %w", err)
 	}
+
+	// Validate server MAC address at config initialization
+	if cfg.ServerMACAddress, err = net.ParseMAC(cfg.ServerMACAddressStr); err != nil {
+		return nil, fmt.Errorf("invalid MAC address in config: %w", err)
+	}
+
+	// Parse network address from SERVER_NETWORK_ADDRESS
+	if cfg.ServerNetworkAddress, err = net.ResolveUDPAddr("udp", cfg.ServerNetworkAddressStr); err != nil {
+		return nil, fmt.Errorf("invalid network address in config: %w", err)
+	}
+
 	return &cfg, nil
 }
