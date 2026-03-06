@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	RedisURL string `env:"REDIS_URL,required"`
+	RedisURL         string `env:"REDIS_URL,required"`
+	ServerMACAddress string `env:"SERVER_MAC_ADDRESS,required"`
 }
 
 // New creates a new Config instance with values from the environment
