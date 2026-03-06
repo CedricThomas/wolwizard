@@ -1,7 +1,8 @@
 package async
 
+import "context"
+
 // Publisher defines the publisher interface
 type Publisher interface {
-	Publish(channel string, message []byte) error
-	Close() error
+	Publish(ctx context.Context, channel string, message any) error
 }
