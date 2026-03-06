@@ -10,5 +10,4 @@ type Keystore interface {
 	Delete(ctx context.Context, key string) error
 	Exists(ctx context.Context, key string) (bool, error)
 	Keys(ctx context.Context, pattern string) ([]string, error)
-	Close() error
 }

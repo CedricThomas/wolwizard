@@ -1,8 +1,11 @@
-module console
+module github.com/CedricThomas/console
 
 go 1.21
 
-require github.com/redis/go-redis/v9 v9.18.0
+require (
+	github.com/caarlos0/env/v11 v11.4.0
+	github.com/redis/go-redis/v9 v9.18.0
+)
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

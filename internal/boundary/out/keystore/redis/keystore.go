@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/CedricThomas/console/internal/boundary/out/keystore"
+
 	"github.com/redis/go-redis/v9"
 )
 
@@ -11,7 +13,7 @@ type redisKeystore struct {
 	client *redis.Client
 }
 
-func New(client *redis.Client) Keystore {
+func New(client *redis.Client) keystore.Keystore {
 	return &redisKeystore{
 		client: client,
 	}
@@ -51,8 +53,4 @@ func (r *redisKeystore) Keys(ctx context.Context, pattern string) ([]string, err
 		return nil, err
 	}
 	return keys, nil
-}
-
-func (r *redisKeystore) Close() error {
-	return r.client.Close()
 }

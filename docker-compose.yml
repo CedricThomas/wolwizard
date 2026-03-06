@@ -10,6 +10,10 @@ services:
     env_file: 
       - ".env"
       - "./cmd/web/.env"
+    develop:
+      watch:
+      - action: rebuild
+        path: .
   pc-agent:
     build:
       context: .
@@ -21,6 +25,10 @@ services:
     env_file: 
       - ".env"
       - "./cmd/pc-agent/.env"
+    develop:
+      watch:
+      - action: rebuild
+        path: .
   raspberry-agent:
     build:
       context: .
@@ -30,14 +38,18 @@ services:
     env_file: 
       - ".env"
       - "./cmd/raspberry-agent/.env"
+    develop:
+      watch:
+      - action: rebuild
+        path: .
   redis:
     image: redis:alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
     env_file: 
       - ".env"
     command: >
-      sh -c "echo 'user $$REDIS_USER on >$$REDIS_PASSWORD ~* +@all' > /tmp/users.acl && redis-server --aclfile /tmp/users.acl"
+      sh -c "echo \"user $REDIS_USER on >$REDIS_PASSWORD ~* +@all\" > /tmp/users.acl && redis-server --aclfile /tmp/users.acl"
     volumes:
       - redis-data:/data
 volumes:
