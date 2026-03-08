@@ -4,7 +4,8 @@ import (
 	"context"
 	"log"
 
-	asyncredis "github.com/CedricThomas/console/internal/boundary/out/async/redis"
+	redisasync "github.com/CedricThomas/console/internal/boundary/out/async/redis"
+	rediskeystore "github.com/CedricThomas/console/internal/boundary/out/keystore/redis"
 	"github.com/CedricThomas/console/internal/config"
 )
 
@@ -26,12 +27,13 @@ func main() {
 		}
 	}()
 
-	publisher, err := asyncredis.NewRedisPublisher(redisClient)
-	if err != nil {
-		log.Fatalf("Cannot initialize Redis publisher: %v", err)
-	}
+	publisher := redisasync.NewRedisPublisher(redisClient)
 
 	_ = publisher
+
+	keystore := rediskeystore.NewRedisKeystore(redisClient)
+
+	_ = keystore
 
 	log.Println("Redis client initialized successfully")
 }

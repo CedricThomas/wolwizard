@@ -13,7 +13,7 @@ type redisKeystore struct {
 	client *redis.Client
 }
 
-func New(client *redis.Client) keystore.Keystore {
+func NewRedisKeystore(client *redis.Client) keystore.Keystore {
 	return &redisKeystore{
 		client: client,
 	}

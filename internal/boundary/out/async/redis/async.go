@@ -13,10 +13,10 @@ type redisPublisher struct {
 }
 
 // NewRedisPublisher creates a new instance of RedisPublisher with the provided Redis client
-func NewRedisPublisher(client *redis.Client) (async.Publisher, error) {
+func NewRedisPublisher(client *redis.Client) async.Publisher {
 	return &redisPublisher{
 		client: client,
-	}, nil
+	}
 }
 
 // Publish sends a message to the specified channel using Redis
