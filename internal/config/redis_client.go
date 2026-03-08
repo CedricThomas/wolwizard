@@ -11,7 +11,7 @@ import (
 func NewRedisClient(ctx context.Context, cfg *Config) (*redis.Client, error) {
 	redisOpts, err := redis.ParseURL(cfg.RedisURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse redis url: %v", err)
+		return nil, fmt.Errorf("parse redis url: %v", err)
 	}
 
 	// Create a new Redis client with the provided configuration
@@ -19,7 +19,7 @@ func NewRedisClient(ctx context.Context, cfg *Config) (*redis.Client, error) {
 
 	// Ping the Redis server to check if it's reachable
 	if _, err := rdb.Ping(ctx).Result(); err != nil {
-		return nil, fmt.Errorf("failed to ping redis: %v", err)
+		return nil, fmt.Errorf("ping redis: %v", err)
 	}
 
 	return rdb, nil

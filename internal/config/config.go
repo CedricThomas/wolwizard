@@ -21,7 +21,7 @@ func New() (*Config, error) {
 	var cfg Config
 	var err error
 	if err = env.Parse(&cfg); err != nil {
-		return nil, fmt.Errorf("failed to process env vars: %w", err)
+		return nil, fmt.Errorf("process env vars: %w", err)
 	}
 
 	if cfg.ServerMACAddressStr != "" {

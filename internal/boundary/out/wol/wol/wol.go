@@ -35,13 +35,13 @@ func (w *wol) SendMagicPacket(ctx context.Context, networkAdddress *net.UDPAddr,
 
 	conn, err := net.DialUDP("udp", nil, networkAdddress)
 	if err != nil {
-		return fmt.Errorf("failed to connect: %w", err)
+		return fmt.Errorf("connect: %w", err)
 	}
 	defer conn.Close()
 
 	_, err = conn.Write(magicPacket)
 	if err != nil {
-		return fmt.Errorf("failed to send magic packet: %w", err)
+		return fmt.Errorf("send magic packet: %w", err)
 	}
 
 	return nil

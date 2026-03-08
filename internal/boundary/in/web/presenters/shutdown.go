@@ -1,6 +1,8 @@
 package presenters
 
-import "github.com/CedricThomas/console/internal/boundary/in/web/api"
+import (
+	"github.com/CedricThomas/console/internal/boundary/in/web/api"
+)
 
 func ShutdownSuccess() api.ShutdownResponse {
 	return api.ShutdownResponse{

@@ -1,5 +1,8 @@
 package main
 
+// main.go - Entry point for the web server application.
+// This file initializes the configuration, Redis client, controllers, and starts the Fiber web server.
+
 import (
 	"context"
 	"log"
@@ -15,12 +18,16 @@ import (
 )
 
 func main() {
+	// Initialize application context
 	ctx := context.Background()
+
+	// Load application configuration
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("Cannot initialize configuration: %v", err)
 	}
 
+	// Create Redis client for caching and async operations
 	redisClient, err := config.NewRedisClient(ctx, cfg)
 	if err != nil {
 		log.Fatalf("Cannot initialize Redis client: %v", err)
@@ -32,17 +39,23 @@ func main() {
 		}
 	}()
 
+	// Initialize external dependencies (Redis publisher and keystore)
 	publisher := redisasync.NewRedisPublisher(redisClient)
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 
+	// Initialize the web controller with dependencies
 	webController := controller.NewWebController(publisher, keystore)
 
+	// Configure and start the Fiber web server
 	app := fiber.New()
-	app.Use(cors.New())
+	app.Use(cors.New()) // Enable CORS for cross-origin requests
+
+	// Define API routes
 	api := app.Group("/api")
 	router.RegisterWebRoutes(api, webController)
-	listenAddr := ":" + cfg.Port
-	log.Fatal(app.Listen(listenAddr))
 
-	log.Println("Redis client initialized successfully")
+	// Start the server on the configured port
+	listenAddr := ":" + cfg.Port
+	log.Println("Starting web server on", listenAddr)
+	log.Fatal(app.Listen(listenAddr))
 }
