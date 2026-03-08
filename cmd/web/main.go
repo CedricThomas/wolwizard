@@ -4,9 +4,14 @@ import (
 	"context"
 	"log"
 
+	"github.com/CedricThomas/console/internal/boundary/in/web/fiber/router"
 	redisasync "github.com/CedricThomas/console/internal/boundary/out/async/redis"
 	rediskeystore "github.com/CedricThomas/console/internal/boundary/out/keystore/redis"
 	"github.com/CedricThomas/console/internal/config"
+	controller "github.com/CedricThomas/console/internal/controller/base"
+
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 )
 
 func main() {
@@ -28,12 +33,15 @@ func main() {
 	}()
 
 	publisher := redisasync.NewRedisPublisher(redisClient)
-
-	_ = publisher
-
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 
-	_ = keystore
+	webController := controller.NewWebController(publisher, keystore)
+
+	app := fiber.New()
+	app.Use(cors.New())
+	api := app.Group("/api")
+	router.RegisterWebRoutes(api, webController)
+	log.Fatal(app.Listen(":8080"))
 
 	log.Println("Redis client initialized successfully")
 }

@@ -51,7 +51,9 @@ func (r *redisConsumer) Subscribe(ctx context.Context, channel string, callback 
 					log.Printf("callback error: %v", err)
 				}
 			case <-ctx.Done():
-				_ = pubsub.Close()
+				if err := pubsub.Close(); err != nil {
+					log.Printf("Failed to close pubsub: %v", err)
+				}
 				return
 			}
 		}
