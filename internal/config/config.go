@@ -9,9 +9,9 @@ import (
 
 type Config struct {
 	RedisURL                string           `env:"REDIS_URL,required"`
-	ServerMACAddressStr     string           `env:"SERVER_MAC_ADDRESS,required"`
+	ServerMACAddressStr     string           `env:"SERVER_MAC_ADDRESS"`
 	ServerMACAddress        net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
-	ServerNetworkAddressStr string           `env:"SERVER_NETWORK_ADDRESS,required"`
+	ServerNetworkAddressStr string           `env:"SERVER_NETWORK_ADDRESS"`
 	ServerNetworkAddress    *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
 }
 
@@ -23,15 +23,18 @@ func New() (*Config, error) {
 		return nil, fmt.Errorf("failed to process env vars: %w", err)
 	}
 
-	// Validate server MAC address at config initialization
-	if cfg.ServerMACAddress, err = net.ParseMAC(cfg.ServerMACAddressStr); err != nil {
-		return nil, fmt.Errorf("invalid MAC address in config: %w", err)
+	if cfg.ServerMACAddressStr != "" {
+		// Validate server MAC address at config initialization
+		if cfg.ServerMACAddress, err = net.ParseMAC(cfg.ServerMACAddressStr); err != nil {
+			return nil, fmt.Errorf("invalid MAC address in config: %w", err)
+		}
 	}
 
-	// Parse network address from SERVER_NETWORK_ADDRESS
-	if cfg.ServerNetworkAddress, err = net.ResolveUDPAddr("udp", cfg.ServerNetworkAddressStr); err != nil {
-		return nil, fmt.Errorf("invalid network address in config: %w", err)
+	if cfg.ServerNetworkAddressStr != "" {
+		// Parse network address from SERVER_NETWORK_ADDRESS
+		if cfg.ServerNetworkAddress, err = net.ResolveUDPAddr("udp", cfg.ServerNetworkAddressStr); err != nil {
+			return nil, fmt.Errorf("invalid network address in config: %w", err)
+		}
 	}
-
 	return &cfg, nil
 }
