@@ -41,7 +41,7 @@ func main() {
 	app.Use(cors.New())
 	api := app.Group("/api")
 	router.RegisterWebRoutes(api, webController)
-	listenAddr := ":" + cfg.WebPort
+	listenAddr := ":" + cfg.Port
 	log.Fatal(app.Listen(listenAddr))
 
 	log.Println("Redis client initialized successfully")

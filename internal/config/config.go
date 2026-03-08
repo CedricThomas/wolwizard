@@ -13,7 +13,7 @@ type Config struct {
 	ServerMACAddress        net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
 	ServerNetworkAddressStr string           `env:"SERVER_NETWORK_ADDRESS"`
 	ServerNetworkAddress    *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
-	WebPort                 string           `env:"PORT"`
+	Port                    string           `env:"PORT"`
 }
 
 // New creates a new Config instance with values from the environment
