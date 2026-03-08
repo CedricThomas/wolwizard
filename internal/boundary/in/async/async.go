@@ -2,11 +2,12 @@ package async
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
+	"fmt"
 )
 
 // Callback is a function that processes a message from a channel
-type Callback func(ctx context.Context, message any) error
+type Callback func(ctx context.Context, message string) error
 
 // Consumer defines the interface for consuming messages from channels
 type Consumer interface {
@@ -20,12 +21,12 @@ type TypedCallback[T any] func(ctx context.Context, message T) error
 
 // Generic typed subscription helper
 func Subscribe[T any](ctx context.Context, consumer Consumer, channel string, handler TypedCallback[T]) (func() error, error) {
-	wrapped := func(ctx context.Context, message any) error {
-		msg, ok := message.(T)
-		if !ok {
-			return errors.New("invalid message type")
+	wrapped := func(ctx context.Context, msg string) error {
+		var data T
+		if err := json.Unmarshal([]byte(msg), &msg); err != nil {
+			return fmt.Errorf("invalid unmarshaling on consumption: %v", err)
 		}
-		return handler(ctx, msg)
+		return handler(ctx, data)
 	}
 	return consumer.Subscribe(ctx, channel, wrapped)
 }
