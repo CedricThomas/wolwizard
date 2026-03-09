@@ -49,8 +49,8 @@ services:
     env_file: 
       - ".env"
     command: >
-      sh -c "echo \"user $REDIS_USER on >$REDIS_PASSWORD ~* +@all\" > /tmp/users.acl && redis-server --aclfile /tmp/users.acl"
+      redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
-      - redis-data:/data
+        - redis-data:/data
 volumes:
   redis-data:

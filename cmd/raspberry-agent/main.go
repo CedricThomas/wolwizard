@@ -13,7 +13,6 @@ import (
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
 	asyncdomain "github.com/CedricThomas/console/internal/domain/async"
-	"github.com/redis/go-redis/v9"
 )
 
 const bootChannel = "boot_commands"
@@ -35,10 +34,17 @@ func main() {
 		log.Fatal("Missing required SERVER_NETWORK_ADDRESS in environment")
 	}
 
-	// Initialize Redis client
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: cfg.RedisURL,
-	})
+	// Create Redis client for caching and async operations
+	redisClient, err := config.NewRedisClient(ctx, cfg)
+	if err != nil {
+		log.Fatalf("Cannot initialize Redis client: %v", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Failed to close Redis client: %v", err)
+			return
+		}
+	}()
 
 	// Initialize external dependencies (Redis consumer and wake on lan sender)
 	consumer := redisin.NewRedisConsumer(redisClient)
