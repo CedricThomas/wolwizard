@@ -23,7 +23,7 @@ type TypedCallback[T any] func(ctx context.Context, message T) error
 func Subscribe[T any](ctx context.Context, consumer Consumer, channel string, handler TypedCallback[T]) (func() error, error) {
 	wrapped := func(ctx context.Context, msg string) error {
 		var data T
-		if err := json.Unmarshal([]byte(msg), &msg); err != nil {
+		if err := json.Unmarshal([]byte(msg), &data); err != nil {
 			return fmt.Errorf("invalid unmarshaling on consumption: %v", err)
 		}
 		return handler(ctx, data)

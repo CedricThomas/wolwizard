@@ -2,21 +2,23 @@ package presenters
 
 import (
 	"github.com/CedricThomas/console/internal/boundary/in/web/api"
-	"github.com/CedricThomas/console/internal/domain"
 )
 
-func BootSuccess(name domain.OSName) api.BootResponse {
+func BootSuccess(req api.BootRequest) api.BootResponse {
 	return api.BootResponse{
 		Status: true,
 		Data: api.BootData{
-			OSName: api.OSName(name),
+			OSName: req.OSName,
 		},
 	}
 }
 
-func BootError(err error) api.BootResponse {
+func BootError(err error, req api.BootRequest) api.BootResponse {
 	return api.BootResponse{
 		Status: false,
-		Error:  err.Error(),
+		Data: api.BootData{
+			OSName: req.OSName,
+		},
+		Error: err.Error(),
 	}
 }

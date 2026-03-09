@@ -12,27 +12,26 @@ import (
 
 func BootSelectedOS(controller controller.Web) fiber.Handler {
 	return func(c fiber.Ctx) error {
-
 		var req api.BootRequest
 
 		if err := c.Bind().Body(&req); err != nil {
 			c.Status(http.StatusBadRequest)
-			return c.JSON(presenters.BootError(err))
+			return c.JSON(presenters.BootError(err, req))
 		}
 
 		if err := req.Validate(); err != nil {
 			// custom error returned with message
 			c.Status(http.StatusBadRequest)
-			return c.JSON(presenters.BootError(err))
+			return c.JSON(presenters.BootError(err, req))
 		}
 
 		osName := domain.OSName(req.OSName)
 		err := controller.BootSelectedOS(c.Context(), osName)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
-			return c.JSON(presenters.BootError(err))
+			return c.JSON(presenters.BootError(err, req))
 		}
 
-		return c.JSON(presenters.BootSuccess(osName))
+		return c.JSON(presenters.BootSuccess(req))
 	}
 }

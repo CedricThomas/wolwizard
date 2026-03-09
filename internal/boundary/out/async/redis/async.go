@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/CedricThomas/console/internal/boundary/out/async"
 	"github.com/redis/go-redis/v9"
@@ -21,5 +23,9 @@ func NewRedisPublisher(client *redis.Client) async.Publisher {
 
 // Publish sends a message to the specified channel using Redis
 func (rp *redisPublisher) Publish(ctx context.Context, channel string, message any) error {
-	return rp.client.Publish(ctx, channel, message).Err()
+	data, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("marshal boot message: %w", err)
+	}
+	return rp.client.Publish(ctx, channel, data).Err()
 }
