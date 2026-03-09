@@ -8,12 +8,11 @@ import (
 	"syscall"
 
 	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
+	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
 	"github.com/CedricThomas/console/internal/boundary/out/wol/wol"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
 )
-
-const bootChannel = "boot_commands"
 
 func main() {
 	ctx := context.Background()
@@ -24,7 +23,7 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Parse MAC address
+	// Validate required configuration
 	if cfg.ServerMACAddress == nil {
 		log.Fatal("Missing required SERVER_MAC_ADDRESS in environment")
 	}
@@ -44,21 +43,29 @@ func main() {
 		}
 	}()
 
-	// Initialize external dependencies (Redis consumer and wake on lan sender)
-	_ = redisin.NewRedisConsumer(redisClient)
+	// Initialize external dependencies
+	consumer := redisin.NewRedisConsumer(redisClient)
 	wolSender := wol.New()
 
-	_ = controller.NewRaspberryAgentController(wolSender, cfg)
+	// Initialize controllers
+	raspberryController := controller.NewRaspberryAgentController(wolSender, cfg)
 
-	// Subscribe to boot commands and send WoL
-	// unsubscribe, err := async.Subscribe(ctx, consumer, asyncdomain.BootChannel, controller.WakeUpPCAgent)
-	// if err != nil {
-	// 	log.Fatalf("Failed to subscribe to boot channel: %v", err)
-	// }
-	// defer unsubscribe()
+	// Register async subscriptions
+	unsubscribes, err := subscriptions.RegisterRaspberryAgent(ctx, consumer, raspberryController)
+	if err != nil {
+		log.Fatalf("Failed to register async subscriptions: %v", err)
+	}
 
-	log.Println("Raspberry agent listening for boot commands...")
-	log.Printf("Target MAC: %s, Network: %s", cfg.ServerMACAddress, cfg.ServerNetworkAddress)
+	// Cleanup subscriptions
+	for _, unsubscribe := range unsubscribes {
+		defer func() {
+			if err := unsubscribe(); err != nil {
+				log.Printf("Failed to unsubscribe: %v", err)
+			}
+		}()
+	}
+
+	log.Println("Raspberry agent listening for async commands...")
 
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
