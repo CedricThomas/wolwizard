@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/CedricThomas/console/internal/boundary/out/wol"
 	"github.com/CedricThomas/console/internal/config"
@@ -27,5 +28,6 @@ func (ra *rpAgent) ExecuteBootMessage(ctx context.Context, bootMessage async.Boo
 	if err != nil {
 		return fmt.Errorf("send magic packet: %w", err)
 	}
+	log.Printf("Sent a wake up order for: %s\n", bootMessage.OSName)
 	return nil
 }

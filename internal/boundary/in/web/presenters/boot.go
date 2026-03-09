@@ -9,7 +9,7 @@ func BootSuccess(name domain.OSName) api.BootResponse {
 	return api.BootResponse{
 		Status: true,
 		Data: api.BootData{
-			Name: api.OSName(name),
+			OSName: api.OSName(name),
 		},
 	}
 }

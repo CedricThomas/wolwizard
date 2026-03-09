@@ -10,15 +10,15 @@ const (
 )
 
 type BootRequest struct {
-	Name OSName `json:"name"`
+	OSName OSName `json:"os_name"`
 }
 
 func (r BootRequest) Validate() error {
-	if r.Name == "" {
+	if r.OSName == "" {
 		return errors.New("os name is required")
 	}
 
-	switch r.Name {
+	switch r.OSName {
 	case OSWindows, OSLinux:
 		return nil
 	}
@@ -27,7 +27,7 @@ func (r BootRequest) Validate() error {
 }
 
 type BootData struct {
-	Name OSName `json:"name"`
+	OSName OSName `json:"os_name"`
 }
 
 type BootResponse struct {

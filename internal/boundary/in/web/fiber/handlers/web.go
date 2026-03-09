@@ -26,7 +26,7 @@ func BootSelectedOS(controller controller.Web) fiber.Handler {
 			return c.JSON(presenters.BootError(err))
 		}
 
-		osName := domain.OSName(req.Name)
+		osName := domain.OSName(req.OSName)
 		err := controller.BootSelectedOS(c.Context(), osName)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
