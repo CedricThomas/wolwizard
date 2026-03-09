@@ -12,6 +12,6 @@ func NewPCAgentController() controller.PCAgent {
 	return pcAgent{}
 }
 
-func (pa pcAgent) ShutdowncurrentHost(_ context.Context) error {
+func (pa pcAgent) ShutdownCurrentHost(_ context.Context) error {
 	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/CedricThomas/console/internal/boundary/out/wol"
 	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/controller"
-	"github.com/CedricThomas/console/internal/domain/async"
+	"github.com/CedricThomas/console/internal/domain"
 )
 
 type rpAgent struct {
@@ -23,11 +23,11 @@ func NewRaspberryAgentController(wolSender wol.Sender, cfg *config.Config) contr
 	}
 }
 
-func (ra *rpAgent) ExecuteBootMessage(ctx context.Context, bootMessage async.BootMessage) error {
+func (ra *rpAgent) WakeUpPCAgent(ctx context.Context, osName domain.OSName) error {
 	err := ra.wolSender.SendMagicPacket(ctx, ra.config.ServerNetworkAddress, ra.config.ServerMACAddress)
 	if err != nil {
 		return fmt.Errorf("send magic packet: %w", err)
 	}
-	log.Printf("Sent a wake up order for: %s\n", bootMessage.OSName)
+	log.Printf("Sent a wake up order for: %s\n", osName)
 	return nil
 }

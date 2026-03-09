@@ -7,12 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/CedricThomas/console/internal/boundary/in/async"
 	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
 	"github.com/CedricThomas/console/internal/boundary/out/wol/wol"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
-	asyncdomain "github.com/CedricThomas/console/internal/domain/async"
 )
 
 const bootChannel = "boot_commands"
@@ -47,17 +45,17 @@ func main() {
 	}()
 
 	// Initialize external dependencies (Redis consumer and wake on lan sender)
-	consumer := redisin.NewRedisConsumer(redisClient)
+	_ = redisin.NewRedisConsumer(redisClient)
 	wolSender := wol.New()
 
-	controller := controller.NewRaspberryAgentController(wolSender, cfg)
+	_ = controller.NewRaspberryAgentController(wolSender, cfg)
 
 	// Subscribe to boot commands and send WoL
-	unsubscribe, err := async.Subscribe(ctx, consumer, asyncdomain.BootChannel, controller.ExecuteBootMessage)
-	if err != nil {
-		log.Fatalf("Failed to subscribe to boot channel: %v", err)
-	}
-	defer unsubscribe()
+	// unsubscribe, err := async.Subscribe(ctx, consumer, asyncdomain.BootChannel, controller.WakeUpPCAgent)
+	// if err != nil {
+	// 	log.Fatalf("Failed to subscribe to boot channel: %v", err)
+	// }
+	// defer unsubscribe()
 
 	log.Println("Raspberry agent listening for boot commands...")
 	log.Printf("Target MAC: %s, Network: %s", cfg.ServerMACAddress, cfg.ServerNetworkAddress)

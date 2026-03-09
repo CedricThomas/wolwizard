@@ -6,7 +6,7 @@ import (
 
 const BootChannel = "boot"
 
-// BootMessage represents a boot request that can be published via pubsub
-type BootMessage struct {
+// BootCommand represents a boot request that can be published via pubsub
+type BootCommand struct {
 	OSName domain.OSName `json:"os_name"`
 }
