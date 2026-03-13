@@ -18,10 +18,9 @@ func RegisterWeb(
 	webController controller.Web,
 ) ([]func() error, error) {
 	var unsubscribes []func() error
-
-	unsubscribe, err := consumer.Subscribe(ctx, asyncapi.BootChannel, handlers.ReportMetrics(webController))
+	unsubscribe, err := consumer.Subscribe(ctx, asyncapi.MetricsChannel, handlers.ReportMetrics(webController))
 	if err != nil {
-		return nil, fmt.Errorf("subscribe to boot channel: %w", err)
+		return nil, fmt.Errorf("subscribe to metrics channel: %w", err)
 	}
 	unsubscribes = append(unsubscribes, unsubscribe)
 
