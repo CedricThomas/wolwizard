@@ -2,6 +2,7 @@ package base
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/CedricThomas/console/internal/boundary/out/command"
 	"github.com/CedricThomas/console/internal/controller"
