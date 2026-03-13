@@ -7,6 +7,8 @@ import (
 	"context"
 	"log"
 
+	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
+	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
 	"github.com/CedricThomas/console/internal/boundary/in/web/fiber/router"
 	redisasync "github.com/CedricThomas/console/internal/boundary/out/async/redis"
 	rediskeystore "github.com/CedricThomas/console/internal/boundary/out/keystore/redis"
@@ -42,9 +44,25 @@ func main() {
 	// Initialize external dependencies (Redis publisher and keystore)
 	publisher := redisasync.NewRedisPublisher(redisClient)
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
+	consumer := redisin.NewRedisConsumer(redisClient)
 
 	// Initialize the web controller with dependencies
 	webController := controller.NewWebController(publisher, keystore)
+
+	// Register async subscriptions
+	unsubscribes, err := subscriptions.RegisterWeb(ctx, consumer, webController)
+	if err != nil {
+		log.Fatalf("Failed to register async subscriptions: %v", err)
+	}
+
+	// Cleanup subscriptions
+	for _, unsubscribe := range unsubscribes {
+		defer func() {
+			if err := unsubscribe(); err != nil {
+				log.Printf("Failed to unsubscribe: %v", err)
+			}
+		}()
+	}
 
 	// Configure and start the Fiber web server
 	app := fiber.New()

@@ -2,3 +2,6 @@
 ./cmd/pc-agent/.env
 ./cmd/web/.env
 ./cmd/rapsberry-agent/.env
+pc-agent
+web
+rapsberry-agent

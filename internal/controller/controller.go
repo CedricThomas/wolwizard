@@ -17,4 +17,5 @@ type RaspberryAgent interface {
 
 type PCAgent interface {
 	ShutdownCurrentHost(ctx context.Context) error
+	SendAsyncMetrics(ctx context.Context, metrics domain.Metrics) error
 }

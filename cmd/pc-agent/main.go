@@ -13,6 +13,9 @@ import (
 	"github.com/CedricThomas/console/internal/boundary/out/command"
 	"github.com/CedricThomas/console/internal/boundary/out/command/linux"
 	"github.com/CedricThomas/console/internal/boundary/out/command/windows"
+	"github.com/CedricThomas/console/internal/boundary/out/metrics"
+	metricslinux "github.com/CedricThomas/console/internal/boundary/out/metrics/linux"
+	metricswindows "github.com/CedricThomas/console/internal/boundary/out/metrics/windows"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
 )
@@ -52,6 +55,17 @@ func main() {
 		log.Fatalf("Unsupported operating system: %s", runtime.GOOS)
 	}
 
+	// Initialize metrics publisher
+	var collector metrics.MetricsCollector
+	switch runtime.GOOS {
+	case "linux":
+		collector = metricslinux.New()
+	case "windows":
+		collector = metricswindows.New()
+	}
+
+	_ = collector // TODO: implement a cron package to collect and send metrics at regular intervals
+
 	// Initialize controllers
 	pcAgentController := controller.NewPCAgentController(executor)
 
@@ -69,6 +83,7 @@ func main() {
 			}
 		}()
 	}
+
 	log.Println("PC agent listening for async commands...")
 
 	// Wait for interrupt signal

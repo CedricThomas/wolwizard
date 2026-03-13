@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	RedisURL                string           `env:"REDIS_URL,required"`
-	ServerMACAddressStr     string           `env:"SERVER_MAC_ADDRESS"`
-	ServerMACAddress        net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
-	ServerNetworkAddressStr string           `env:"SERVER_NETWORK_ADDRESS"`
-	ServerNetworkAddress    *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
-	Port                    string           `env:"PORT"`
+	RedisURL                        string           `env:"REDIS_URL,required"`
+	ServerMACAddressStr             string           `env:"SERVER_MAC_ADDRESS"`
+	ServerMACAddress                net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
+	ServerNetworkAddressStr         string           `env:"SERVER_NETWORK_ADDRESS"`
+	ServerNetworkAddress            *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
+	Port                            string           `env:"PORT"`
+	MetricsReportingIntervalSeconds int              `env:"METRICS_INTERVAL_SECONDS,default=30"`
 }
 
 // New creates a new Config instance with values from the environment

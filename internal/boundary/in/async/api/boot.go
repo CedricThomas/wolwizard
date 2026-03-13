@@ -16,4 +16,3 @@ type BootCommand struct {
 
 // ShutdownCommand represents a shutdown request that can be published via pubsub
 type ShutdownCommand struct{}
-
