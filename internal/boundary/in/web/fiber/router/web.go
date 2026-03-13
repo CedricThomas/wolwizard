@@ -9,4 +9,5 @@ import (
 // RegisterWebRoutes is the fiber web Router for the Web controller
 func RegisterWebRoutes(app fiber.Router, controller controller.Web) {
 	app.Post("/boot", handlers.BootSelectedOS(controller))
+	app.Post("/shutdown", handlers.ShutdownHandler(controller))
 }

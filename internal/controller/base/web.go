@@ -32,3 +32,13 @@ func (w web) SendAsyncBootCommand(ctx context.Context, osName domain.OSName) err
 
 	return nil
 }
+
+func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
+	// Publish shutdown command to Redis pubsub channel
+	shutdownCmd := asyncapi.ShutdownCommand{}
+	if err := w.publisher.Publish(ctx, asyncapi.ShutdownChannel, shutdownCmd); err != nil {
+		return fmt.Errorf("publish shutdown command: %w", err)
+	}
+
+	return nil
+}

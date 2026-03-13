@@ -8,6 +8,7 @@ import (
 
 type Web interface {
 	SendAsyncBootCommand(ctx context.Context, osName domain.OSName) error
+	SendAsyncShutdownCommand(ctx context.Context) error
 }
 
 type RaspberryAgent interface {

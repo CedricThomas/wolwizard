@@ -1,5 +1,7 @@
 package api
 
+type ShutdownRequest struct{}
+
 type ShutdownResponse struct {
 	Status bool   `json:"status"`
 	Data   any    `json:"data,omitempty"`

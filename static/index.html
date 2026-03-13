@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Console - System Control</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 20px;
+		}
+
+		.container {
+			background: white;
+			padding: 40px;
+			border-radius: 16px;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+			max-width: 400px;
+			width: 100%;
+		}
+
+		h1 {
+			text-align: center;
+			color: #333;
+			margin-bottom: 8px;
+			font-size: 28px;
+		}
+
+		.subtitle {
+			text-align: center;
+			color: #666;
+			margin-bottom: 32px;
+			font-size: 14px;
+		}
+
+		.button-group {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+		}
+
+		.btn {
+			padding: 16px 24px;
+			border: none;
+			border-radius: 8px;
+			font-size: 16px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		.btn:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		.btn-windows {
+			background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+			color: white;
+		}
+
+		.btn-windows:hover:not(:disabled) {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 20px rgba(0, 120, 212, 0.4);
+		}
+
+		.btn-linux {
+			background: linear-gradient(135deg, #f26522 0%, #e95420 100%);
+			color: white;
+		}
+
+		.btn-linux:hover:not(:disabled) {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 20px rgba(242, 101, 34, 0.4);
+		}
+
+		.btn-shutdown {
+			background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+			color: white;
+		}
+
+		.btn-shutdown:hover:not(:disabled) {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+		}
+
+		.status {
+			margin-top: 24px;
+			padding: 16px;
+			border-radius: 8px;
+			text-align: center;
+			display: none;
+			font-size: 14px;
+		}
+
+		.status.success {
+			background: #d4edda;
+			color: #155724;
+			display: block;
+		}
+
+		.status.error {
+			background: #f8d7da;
+			color: #721c24;
+			display: block;
+		}
+
+		.icon {
+			font-size: 20px;
+		}
+
+		.spinner {
+			width: 16px;
+			height: 16px;
+			border: 2px solid transparent;
+			border-top-color: currentColor;
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+		}
+
+		@keyframes spin {
+			to { transform: rotate(360deg); }
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>🖥️ Console</h1>
+		<p class="subtitle">System Control Panel</p>
+		
+		<div class="button-group">
+			<button class="btn btn-windows" onclick="bootSystem('windows')">
+				<span class="icon">🪟</span>
+				<span>Boot Windows</span>
+				<span class="spinner" style="display: none;"></span>
+			</button>
+			
+			<button class="btn btn-linux" onclick="bootSystem('linux')">
+				<span class="icon">🐧</span>
+				<span>Boot Linux</span>
+				<span class="spinner" style="display: none;"></span>
+			</button>
+			
+			<button class="btn btn-shutdown" onclick="shutdownSystem()">
+				<span class="icon">🔌</span>
+				<span>Shutdown</span>
+				<span class="spinner" style="display: none;"></span>
+			</button>
+		</div>
+		
+		<div id="status" class="status"></div>
+	</div>
+
+	<script>
+		async function bootSystem(osName) {
+			await sendRequest('api/boot', { os_name: osName });
+		}
+
+		async function shutdownSystem() {
+			await sendRequest('api/shutdown', {});
+		}
+
+		async function sendRequest(endpoint, data) {
+			const statusEl = document.getElementById('status');
+			const allButtons = document.querySelectorAll('.btn');
+			const allSpinners = document.querySelectorAll('.spinner');
+			const textSpans = document.querySelectorAll('.btn > span:not(.icon):not(.spinner)');
+			
+			statusEl.classList.remove('success', 'error');
+			statusEl.style.display = 'none';
+			
+			allButtons.forEach(btn => btn.disabled = true);
+			allSpinners.forEach(s => s.style.display = 'inline-block');
+			textSpans.forEach(t => t.style.opacity = '0.5');
+			
+			try {
+				const response = await fetch(endpoint, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(data),
+				});
+				
+				const result = await response.json();
+				
+				if (result.status) {
+					statusEl.textContent = '✅ Command sent successfully!';
+					statusEl.classList.add('success');
+				} else {
+					statusEl.textContent = '❌ Error: ' + (result.error || 'Unknown error');
+					statusEl.classList.add('error');
+				}
+			} catch (error) {
+				statusEl.textContent = '❌ Network error: ' + error.message;
+				statusEl.classList.add('error');
+			} finally {
+				statusEl.style.display = 'block';
+				allButtons.forEach(btn => btn.disabled = false);
+				allSpinners.forEach(s => s.style.display = 'none');
+				textSpans.forEach(t => t.style.opacity = '1');
+			}
+		}
+	</script>
+</body>
+</html>

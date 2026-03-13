@@ -54,6 +54,17 @@ func main() {
 	api := app.Group("/api")
 	router.RegisterWebRoutes(api, webController)
 
+	// Serve index.html for root route
+	app.Get("/", func(c fiber.Ctx) error {
+		return c.SendFile("./static/index.html")
+	})
+
+	// Serve static files from /static route
+	app.Get("/static/*", func(c fiber.Ctx) error {
+		filePath := "./static/" + c.Params("*", "")
+		return c.SendFile(filePath)
+	})
+
 	// Start the server on the configured port
 	listenAddr := ":" + cfg.Port
 	log.Println("Starting web server on", listenAddr)

@@ -1,13 +1,14 @@
+# Build stage
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /build
 
-# Install git for go modules
+# Install dependencies
 RUN apk add --no-cache git
 
 # Copy go mod files first for better caching
 COPY go.mod go.sum* ./
-RUN go mod tidy || true
+RUN go mod download
 
 # Copy the rest of the source
 COPY . .
@@ -23,5 +24,8 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /
 
 COPY --from=builder /build/web .
+COPY --from=builder /build/static ./static
+
+EXPOSE 8080
 
 CMD ["/web"]

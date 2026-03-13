@@ -35,3 +35,15 @@ func BootSelectedOS(controller controller.Web) fiber.Handler {
 		return c.JSON(presenters.BootSuccess(req))
 	}
 }
+
+func ShutdownHandler(controller controller.Web) fiber.Handler {
+	return func(c fiber.Ctx) error {
+		err := controller.SendAsyncShutdownCommand(c.Context())
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return c.JSON(presenters.ShutdownError(err))
+		}
+
+		return c.JSON(presenters.ShutdownSuccess())
+	}
+}
