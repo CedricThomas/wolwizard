@@ -15,7 +15,7 @@ type Config struct {
 	ServerNetworkAddressStr            string           `env:"SERVER_NETWORK_ADDRESS"`
 	ServerNetworkAddress               *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
 	Port                               string           `env:"PORT"`
-	MetricsReportingIntervalSecondsStr string           `env:"METRICS_INTERVAL_SECONDS,default=30"`
+	MetricsReportingIntervalSecondsStr string           `env:"METRICS_INTERVAL_SECONDS" envDefault="30"`
 	MetricsReportingIntervalSeconds    int              `env:"-"` // Parsed from METRICS_INTERVAL_SECONDS
 }
 

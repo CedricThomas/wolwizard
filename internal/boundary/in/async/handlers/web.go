@@ -8,6 +8,7 @@ import (
 
 	"github.com/CedricThomas/console/internal/boundary/in/async"
 	"github.com/CedricThomas/console/internal/boundary/in/async/api"
+	"github.com/CedricThomas/console/internal/boundary/in/async/presenters"
 	"github.com/CedricThomas/console/internal/controller"
 )
 
@@ -20,7 +21,9 @@ func ReportMetrics(controller controller.Web) async.Callback {
 		}
 		log.Printf("Received metrics: CPU %.2f%%, Memory %.2f%%", metrics.CPUUsage, metrics.MemoryUsage)
 
-		// TODO implement an api to domain converter and send a call to the Web controller to handle the received metrics
+		if err := controller.ProcessMetrics(ctx, presenters.MetricsCommandToDomain(metrics)); err != nil {
+			return fmt.Errorf("process metrics: %v", err)
+		}
 		return nil
 	}
 }

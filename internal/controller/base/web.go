@@ -42,3 +42,8 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 
 	return nil
 }
+
+func (w web) ProcessMetrics(_ context.Context, _ domain.Metrics) error {
+	// TODO implement
+	return nil
+}

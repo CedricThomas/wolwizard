@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/CedricThomas/console/internal/boundary/in/async/api"
+	"github.com/CedricThomas/console/internal/boundary/in/async/presenters"
 	"github.com/CedricThomas/console/internal/boundary/out/async"
 	"github.com/CedricThomas/console/internal/boundary/out/command"
 	"github.com/CedricThomas/console/internal/controller"
@@ -32,9 +33,7 @@ func (pa *pcAgent) ShutdownCurrentHost(ctx context.Context) error {
 
 // SendAsyncMetrics sends the metrics asynchronously.
 func (pa *pcAgent) SendAsyncMetrics(ctx context.Context, metrics domain.Metrics) error {
-	err := pa.publisher.Publish(ctx, api.MetricsChannel, api.MetricsCommand{
-		// TODO: fill in the fields of MetricsCommand
-	})
+	err := pa.publisher.Publish(ctx, api.MetricsChannel, presenters.DomainToMetricsCommand(metrics))
 	if err != nil {
 		return fmt.Errorf("send async metrics: %w", err)
 	}

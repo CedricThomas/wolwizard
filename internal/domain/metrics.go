@@ -1,10 +1,8 @@
 package domain
 
 type Metrics struct {
+	OS          OSName
 	CPUUsage    float64
+	VRAMUsage   float64
 	MemoryUsage float64
-	DiskUsage   float64
-	NetworkIn   float64
-	NetworkOut  float64
-	Timestamp   int64
 }
