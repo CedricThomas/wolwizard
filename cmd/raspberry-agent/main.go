@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
-	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
-	"github.com/CedricThomas/console/internal/boundary/out/wol/wol"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
+	redisin "github.com/CedricThomas/console/internal/input/async/redis"
+	"github.com/CedricThomas/console/internal/input/async/subscriptions"
+	"github.com/CedricThomas/console/internal/service/wol/wol"
 )
 
 func main() {

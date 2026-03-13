@@ -7,13 +7,13 @@ import (
 	"context"
 	"log"
 
-	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
-	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
-	"github.com/CedricThomas/console/internal/boundary/in/web/fiber/router"
-	redisasync "github.com/CedricThomas/console/internal/boundary/out/async/redis"
-	rediskeystore "github.com/CedricThomas/console/internal/boundary/out/keystore/redis"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
+	redisin "github.com/CedricThomas/console/internal/input/async/redis"
+	"github.com/CedricThomas/console/internal/input/async/subscriptions"
+	"github.com/CedricThomas/console/internal/input/web/fiber/router"
+	redisasync "github.com/CedricThomas/console/internal/service/async/redis"
+	rediskeystore "github.com/CedricThomas/console/internal/service/keystore/redis"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"

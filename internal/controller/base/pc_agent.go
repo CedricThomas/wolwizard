@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/CedricThomas/console/internal/boundary/in/async/api"
-	"github.com/CedricThomas/console/internal/boundary/in/async/presenters"
-	"github.com/CedricThomas/console/internal/boundary/out/async"
-	"github.com/CedricThomas/console/internal/boundary/out/command"
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/domain"
+	"github.com/CedricThomas/console/internal/input/async/api"
+	"github.com/CedricThomas/console/internal/input/async/presenters"
+	"github.com/CedricThomas/console/internal/service/async"
+	"github.com/CedricThomas/console/internal/service/command"
 )
 
 type pcAgent struct {

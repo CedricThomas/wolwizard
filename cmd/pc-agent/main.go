@@ -8,16 +8,16 @@ import (
 	"runtime"
 	"syscall"
 
-	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
-	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
-	"github.com/CedricThomas/console/internal/boundary/out/command"
-	"github.com/CedricThomas/console/internal/boundary/out/command/linux"
-	"github.com/CedricThomas/console/internal/boundary/out/command/windows"
-	"github.com/CedricThomas/console/internal/boundary/out/metrics"
-	metricslinux "github.com/CedricThomas/console/internal/boundary/out/metrics/linux"
-	metricswindows "github.com/CedricThomas/console/internal/boundary/out/metrics/windows"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
+	redisin "github.com/CedricThomas/console/internal/input/async/redis"
+	"github.com/CedricThomas/console/internal/input/async/subscriptions"
+	"github.com/CedricThomas/console/internal/service/command"
+	"github.com/CedricThomas/console/internal/service/command/linux"
+	"github.com/CedricThomas/console/internal/service/command/windows"
+	"github.com/CedricThomas/console/internal/service/metrics"
+	metricslinux "github.com/CedricThomas/console/internal/service/metrics/linux"
+	metricswindows "github.com/CedricThomas/console/internal/service/metrics/windows"
 )
 
 func main() {

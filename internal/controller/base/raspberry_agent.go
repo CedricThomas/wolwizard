@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/CedricThomas/console/internal/boundary/out/wol"
 	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/domain"
+	"github.com/CedricThomas/console/internal/service/wol"
 )
 
 type rpAgent struct {
