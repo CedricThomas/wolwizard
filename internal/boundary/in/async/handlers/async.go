@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/CedricThomas/console/internal/boundary/in/async"
 	"github.com/CedricThomas/console/internal/boundary/in/async/api"
@@ -17,6 +18,7 @@ func WakeUpPCAgent(controller controller.RaspberryAgent) async.Callback {
 		if err := json.Unmarshal([]byte(rawCmd), &cmd); err != nil {
 			return fmt.Errorf("invalid unmarshaling on consumption: %v", err)
 		}
+		log.Printf("Received boot command for OS: %s", cmd.OSName)
 		if err := controller.WakeUpPCAgent(ctx, cmd.OSName); err != nil {
 			return fmt.Errorf("wake up PC agent: %w", err)
 		}
@@ -27,6 +29,7 @@ func WakeUpPCAgent(controller controller.RaspberryAgent) async.Callback {
 // ShutdownHost creates a typed callback for the PCAgent controller
 func ShutdownHost(controller controller.PCAgent) async.Callback {
 	return func(ctx context.Context, _ string) error {
+		log.Printf("Received shutdown command for current host")
 		if err := controller.ShutdownCurrentHost(ctx); err != nil {
 			return fmt.Errorf("shutdown host: %w", err)
 		}
