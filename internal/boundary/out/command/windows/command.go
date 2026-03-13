@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"strings"
 
 	"github.com/CedricThomas/console/internal/boundary/out/command"
 )
@@ -19,8 +18,8 @@ func New() command.CommandExecutor {
 
 // Shutdown powers off the Windows system using shutdown /p command
 func (e *executor) Shutdown(ctx context.Context) error {
-	_, err := e.Execute(ctx, "shutdown", "/p")
-	if err != nil {
+	cmd := exec.CommandContext(ctx, "shutdown", "/p")
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("shutdown: %w", err)
 	}
 	return nil

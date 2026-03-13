@@ -18,5 +18,9 @@ func NewPCAgentController(executor command.CommandExecutor) controller.PCAgent {
 }
 
 func (pa *pcAgent) ShutdownCurrentHost(ctx context.Context) error {
-	return pa.executor.Shutdown(ctx)
+	err := pa.executor.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("shutdown current host: %w", err)
+	}
+	return nil
 }
