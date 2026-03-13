@@ -5,10 +5,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	redisin "github.com/CedricThomas/console/internal/boundary/in/async/redis"
 	"github.com/CedricThomas/console/internal/boundary/in/async/subscriptions"
+	"github.com/CedricThomas/console/internal/boundary/out/command"
+	"github.com/CedricThomas/console/internal/boundary/out/command/linux"
+	"github.com/CedricThomas/console/internal/boundary/out/command/windows"
 	"github.com/CedricThomas/console/internal/config"
 	controller "github.com/CedricThomas/console/internal/controller/base"
 )
@@ -37,8 +41,19 @@ func main() {
 	// Initialize external dependencies
 	consumer := redisin.NewRedisConsumer(redisClient)
 
+	// Initialize command executor based on platform
+	var executor command.CommandExecutor
+	switch runtime.GOOS {
+	case "linux":
+		executor = linux.New()
+	case "windows":
+		executor = windows.New()
+	default:
+		log.Fatalf("Unsupported operating system: %s", runtime.GOOS)
+	}
+
 	// Initialize controllers
-	pcAgentController := controller.NewPCAgentController()
+	pcAgentController := controller.NewPCAgentController(executor)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterPCAgent(ctx, consumer, pcAgentController)
@@ -54,7 +69,7 @@ func main() {
 			}
 		}()
 	}
-	log.Println("Raspberry agent listening for async commands...")
+	log.Println("PC agent listening for async commands...")
 
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
