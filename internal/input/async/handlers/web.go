@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/input/async"
@@ -19,7 +18,6 @@ func ReportMetrics(controller controller.Web) async.Callback {
 		if err := json.Unmarshal([]byte(rawMetrics), &metrics); err != nil {
 			return fmt.Errorf("invalid unmarshaling of metrics: %v", err)
 		}
-		log.Printf("Received metrics: CPU %.2f%%, Memory %.2f%%", metrics.CPUUsage, metrics.MemoryUsage)
 
 		if err := controller.ProcessMetrics(ctx, presenters.MetricsCommandToDomain(metrics)); err != nil {
 			return fmt.Errorf("process metrics: %v", err)

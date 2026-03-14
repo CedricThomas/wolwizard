@@ -45,6 +45,7 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 }
 
 func (w web) ProcessMetrics(_ context.Context, metrics domain.Metrics) error {
-	log.Printf("Received metrics: %+v", metrics)
+	log.Printf("Received metrics: OS %s, CPU %.2f%%, Memory %.2f%%, VRAM %.2f%%\n", metrics.OS, metrics.CPUUsage, metrics.MemoryUsage, metrics.VRAMUsage)
+
 	return nil
 }

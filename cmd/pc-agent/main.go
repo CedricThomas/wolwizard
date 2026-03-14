@@ -90,6 +90,8 @@ func main() {
 		log.Fatalf("Failed to register periodic jobs: %v", err)
 	}
 
+	cronService.Start()
+
 	log.Println("PC agent listening for async commands...")
 
 	// Wait for interrupt signal

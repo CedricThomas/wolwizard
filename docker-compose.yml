@@ -29,6 +29,11 @@ services:
       watch:
       - action: rebuild
         path: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
   raspberry-agent:
     build:
       context: .

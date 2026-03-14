@@ -15,10 +15,11 @@ COPY . .
 # Build the pc-agent binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o pc-agent ./cmd/pc-agent
 
-# Final stage
-FROM alpine:latest
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 
-RUN apk --no-cache add ca-certificates
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 
