@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/CedricThomas/console/internal/domain"
 	"github.com/CedricThomas/console/internal/service/metrics"
 )
 
@@ -17,39 +17,32 @@ import (
 type collector struct{}
 
 // New creates a new Linux metrics collector
-func New() metrics.MetricsCollector {
+func New() metrics.Collector {
 	return &collector{}
 }
 
 // Collect gathers system metrics from the Linux system
-func (c *collector) Collect(ctx context.Context) (*metrics.PCAgentMetrics, error) {
+func (c *collector) Collect(ctx context.Context) (domain.Metrics, error) {
 	cpuUsage, err := c.getCPUUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get cpu usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get cpu usage: %w", err)
 	}
 
 	memoryUsage, err := c.getMemoryUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get memory usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get memory usage: %w", err)
 	}
 
-	diskUsage, err := c.getDiskUsage(ctx)
+	vramUsage, err := c.getVRAMUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get disk usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get vram usage: %w", err)
 	}
 
-	uptime, err := c.getUptime(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get uptime: %w", err)
-	}
-
-	return &metrics.PCAgentMetrics{
-		OS:          "Linux",
+	return domain.Metrics{
+		OS:          domain.Linux,
 		CPUUsage:    cpuUsage,
 		MemoryUsage: memoryUsage,
-		DiskUsage:   diskUsage,
-		Uptime:      uptime,
-		Status:      "running",
+		VRAMUsage:   vramUsage,
 	}, nil
 }
 
@@ -118,44 +111,40 @@ func (c *collector) getMemoryUsage(ctx context.Context) (float64, error) {
 	return 0, fmt.Errorf("memory info not found")
 }
 
-// getDiskUsage gets the disk usage percentage for the root partition
-func (c *collector) getDiskUsage(ctx context.Context) (float64, error) {
-	cmd := exec.CommandContext(ctx, "df", "-", "/")
+// getVRAMUsage gets the current VRAM usage percentage from NVIDIA GPUs
+func (c *collector) getVRAMUsage(ctx context.Context) (float64, error) {
+	cmd := exec.CommandContext(ctx, "nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,nounits")
 	output, err := cmd.Output()
 	if err != nil {
-		return 0, fmt.Errorf("df command: %w", err)
+		return 0, fmt.Errorf("nvidia-smi command: %w", err)
 	}
 
-	scanner := bufio.NewScanner(strings.NewReader(string(output)))
-	lineNum := 0
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	if len(lines) < 2 {
+		return 0, fmt.Errorf("no GPU data found")
+	}
 
-	for scanner.Scan() {
-		lineNum++
-		if lineNum == 2 {
-			parts := strings.Fields(scanner.Text())
-			if len(parts) >= 5 {
-				usageStr := strings.TrimSuffix(parts[4], "%")
-				usage, err := strconv.ParseFloat(usageStr, 64)
-				if err != nil {
-					return 0, fmt.Errorf("parse disk usage: %w", err)
-				}
-				return usage, nil
-			}
+	var totalUsed, totalMemory float64
+	for i := 1; i < len(lines); i++ {
+		parts := strings.Split(lines[i], ",")
+		if len(parts) < 2 {
+			continue
 		}
+
+		used, err1 := strconv.ParseFloat(strings.TrimSpace(parts[0]), 64)
+		total, err2 := strconv.ParseFloat(strings.TrimSpace(parts[1]), 64)
+
+		if err1 != nil || err2 != nil {
+			return 0, fmt.Errorf("parse VRAM values: %w", err1)
+		}
+
+		totalUsed += used
+		totalMemory += total
 	}
 
-	return 0, fmt.Errorf("disk info not found")
-}
-
-// getUptime gets the system uptime in a human-readable format
-func (c *collector) getUptime(ctx context.Context) (string, error) {
-	cmd := exec.CommandContext(ctx, "uptime", "-p")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("uptime command: %w", err)
+	if totalMemory == 0 {
+		return 0, fmt.Errorf("total VRAM is zero")
 	}
 
-	return strings.TrimSpace(string(output)), nil
+	return (totalUsed / totalMemory) * 100, nil
 }
-
-var _ = time.Now()

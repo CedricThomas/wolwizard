@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/domain"
@@ -43,7 +44,7 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 	return nil
 }
 
-func (w web) ProcessMetrics(_ context.Context, _ domain.Metrics) error {
-	// TODO implement
+func (w web) ProcessMetrics(_ context.Context, metrics domain.Metrics) error {
+	log.Printf("Received metrics: %+v", metrics)
 	return nil
 }

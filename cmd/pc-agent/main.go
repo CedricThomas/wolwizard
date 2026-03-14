@@ -12,6 +12,9 @@ import (
 	controller "github.com/CedricThomas/console/internal/controller/base"
 	redisin "github.com/CedricThomas/console/internal/input/async/redis"
 	"github.com/CedricThomas/console/internal/input/async/subscriptions"
+	"github.com/CedricThomas/console/internal/input/cron/jobs"
+	cronrobfig "github.com/CedricThomas/console/internal/input/cron/robfig"
+	serviceasync "github.com/CedricThomas/console/internal/service/async/redis"
 	"github.com/CedricThomas/console/internal/service/command"
 	"github.com/CedricThomas/console/internal/service/command/linux"
 	"github.com/CedricThomas/console/internal/service/command/windows"
@@ -37,16 +40,22 @@ func main() {
 	defer func() {
 		if err := redisClient.Close(); err != nil {
 			log.Printf("Failed to close Redis client: %v", err)
-			return
 		}
 	}()
 
 	// Initialize external dependencies
 	consumer := redisin.NewRedisConsumer(redisClient)
+	publisher := serviceasync.NewRedisPublisher(redisClient)
+	cronService := cronrobfig.NewRobfigScheduler()
+	defer func() {
+		if err := cronService.Stop(); err != nil {
+			log.Printf("Failed to stop cron: %v", err)
+		}
+	}()
 
 	// Initialize command executor and metrics collector based on the OS
 	var executor command.CommandExecutor
-	var collector metrics.MetricsCollector
+	var collector metrics.Collector
 	switch runtime.GOOS {
 	case "linux":
 		collector = metricslinux.New()
@@ -58,10 +67,8 @@ func main() {
 		log.Fatalf("Unsupported operating system: %s", runtime.GOOS)
 	}
 
-	_ = collector // TODO: implement a cron package to collect and send metrics at regular intervals
-
 	// Initialize controllers
-	pcAgentController := controller.NewPCAgentController(executor)
+	pcAgentController := controller.NewPCAgentController(executor, collector, publisher)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterPCAgent(ctx, consumer, pcAgentController)
@@ -76,6 +83,11 @@ func main() {
 				log.Printf("Failed to unsubscribe: %v", err)
 			}
 		}()
+	}
+
+	// Register periodic jobs
+	if err := jobs.RegisterPCAgent(ctx, cronService, pcAgentController, cfg); err != nil {
+		log.Fatalf("Failed to register periodic jobs: %v", err)
 	}
 
 	log.Println("PC agent listening for async commands...")

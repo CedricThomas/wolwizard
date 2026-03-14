@@ -5,11 +5,10 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/CedricThomas/console/internal/domain"
 	"github.com/CedricThomas/console/internal/service/metrics"
 )
 
@@ -17,39 +16,32 @@ import (
 type collector struct{}
 
 // New creates a new Windows metrics collector
-func New() metrics.MetricsCollector {
+func New() metrics.Collector {
 	return &collector{}
 }
 
 // Collect gathers system metrics from the Windows system
-func (c *collector) Collect(ctx context.Context) (*metrics.PCAgentMetrics, error) {
+func (c *collector) Collect(ctx context.Context) (domain.Metrics, error) {
 	cpuUsage, err := c.getCPUUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get cpu usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get cpu usage: %w", err)
 	}
 
 	memoryUsage, err := c.getMemoryUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get memory usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get memory usage: %w", err)
 	}
 
-	diskUsage, err := c.getDiskUsage(ctx)
+	vramUsage, err := c.getVRAMUsage(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get disk usage: %w", err)
+		return domain.Metrics{}, fmt.Errorf("get vram usage: %w", err)
 	}
 
-	uptime, err := c.getUptime(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("get uptime: %w", err)
-	}
-
-	return &metrics.PCAgentMetrics{
-		OS:          "Windows",
+	return domain.Metrics{
+		OS:          domain.Windows,
 		CPUUsage:    cpuUsage,
 		MemoryUsage: memoryUsage,
-		DiskUsage:   diskUsage,
-		Uptime:      uptime,
-		Status:      "running",
+		VRAMUsage:   vramUsage,
 	}, nil
 }
 
@@ -110,49 +102,43 @@ func (c *collector) getMemoryUsage(ctx context.Context) (float64, error) {
 	return (usedMB / totalMB) * 100, nil
 }
 
-// getDiskUsage gets the disk usage percentage for the C: drive
-func (c *collector) getDiskUsage(ctx context.Context) (float64, error) {
-	cmd := exec.CommandContext(ctx, "wmic", "logicaldisk", "where", "DeviceID='\\\\.\\\\C:'", "get", "size,freespace")
+// getVRAMUsage gets the current VRAM usage percentage
+func (c *collector) getVRAMUsage(ctx context.Context) (float64, error) {
+	cmd := exec.CommandContext(ctx, "wmic", "path", "Win32_VideoController", "get", "AdapterRAM,CurrentAvailableVideoMemory", "/format:csv")
 	output, err := cmd.Output()
 	if err != nil {
 		return 0, fmt.Errorf("wmic command: %w", err)
 	}
 
-	lines := strings.Split(string(output), "\n")
-	if len(lines) < 2 {
-		return 0, fmt.Errorf("disk info not found")
+	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	// Skip header line
+	scanner.Scan()
+
+	if scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		fields := strings.Split(line, ",")
+		if len(fields) < 2 {
+			return 0, fmt.Errorf("invalid video controller data format")
+		}
+
+		// AdapterRAM is in bytes, CurrentAvailableVideoMemory is in bytes
+		totalVRAMStr := strings.Trim(fields[0], "\"")
+		availableVRAMStr := strings.Trim(fields[1], "\"")
+
+		totalVRAM, err1 := strconv.ParseFloat(totalVRAMStr, 64)
+		availableVRAM, err2 := strconv.ParseFloat(availableVRAMStr, 64)
+
+		if err1 != nil || err2 != nil {
+			return 0, fmt.Errorf("parse VRAM values: %w", err1)
+		}
+
+		if totalVRAM == 0 {
+			return 0, fmt.Errorf("total VRAM is zero")
+		}
+
+		usedVRAM := totalVRAM - availableVRAM
+		return (usedVRAM / totalVRAM) * 100, nil
 	}
 
-	line := strings.TrimSpace(lines[1])
-	fields := strings.Fields(line)
-	if len(fields) < 2 {
-		return 0, fmt.Errorf("parse disk: %w", fmt.Errorf("invalid format"))
-	}
-
-	sizeStr := strings.ReplaceAll(fields[0], ",", "")
-	freeStr := strings.ReplaceAll(fields[1], ",", "")
-
-	size, err1 := strconv.ParseFloat(sizeStr, 64)
-	free, err2 := strconv.ParseFloat(freeStr, 64)
-
-	if err1 != nil || err2 != nil {
-		return 0, fmt.Errorf("parse disk values: %w", err1)
-	}
-
-	used := size - free
-	return (used / size) * 100, nil
+	return 0, fmt.Errorf("video controller info not found")
 }
-
-// getUptime gets the system uptime in a human-readable format
-func (c *collector) getUptime(ctx context.Context) (string, error) {
-	cmd := exec.CommandContext(ctx, "powershell", "-Command", "[string](Get-Date).Subtract((Get-CimInstance Win32_OperatingSystem).LastBootUpTime)")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("powershell command: %w", err)
-	}
-
-	return strings.TrimSpace(string(output)), nil
-}
-
-var _ = time.Now()
-var _ = regexp.MustCompile
