@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/CedricThomas/console/internal/controller"
@@ -13,7 +14,7 @@ func AuthMiddleware(authCtrl controller.Auth) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(nil))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("missing authorization header")))
 		}
 
 		token := authHeader
@@ -23,7 +24,7 @@ func AuthMiddleware(authCtrl controller.Auth) fiber.Handler {
 
 		username, err := authCtrl.ValidateToken(c.Context(), token)
 		if err != nil {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(nil))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(err))
 		}
 
 		c.Locals("username", username)

@@ -17,14 +17,20 @@ type pcAgent struct {
 	executor  command.CommandExecutor
 	publisher async.Publisher
 	collector metrics.Collector
+	auth      controller.Auth
 }
 
-func NewPCAgentController(executor command.CommandExecutor, collector metrics.Collector, publisher async.Publisher) controller.PCAgent {
+func NewPCAgentController(executor command.CommandExecutor, collector metrics.Collector, publisher async.Publisher, authCtrl controller.Auth) controller.PCAgent {
 	return &pcAgent{
 		executor:  executor,
 		collector: collector,
 		publisher: publisher,
+		auth:      authCtrl,
 	}
+}
+
+func (pa *pcAgent) CreateAccount(ctx context.Context, username, password string) error {
+	return pa.auth.CreateAccount(ctx, username, password)
 }
 
 func (pa *pcAgent) ShutdownCurrentHost(ctx context.Context) error {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/CedricThomas/console/internal/controller"
@@ -22,7 +23,7 @@ func Login(webCtrl controller.Web) fiber.Handler {
 			return c.Status(http.StatusInternalServerError).JSON(presenters.AuthError(err))
 		}
 		if !authenticated {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(nil))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("authentication failed")))
 		}
 
 		token, err := webCtrl.GenerateToken(c.Context(), req.Username)
@@ -38,7 +39,7 @@ func Verify(webCtrl controller.Web) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		username, ok := c.Locals("username").(string)
 		if !ok || username == "" {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(nil))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("invalid token")))
 		}
 
 		return c.JSON(presenters.AuthVerifySuccess())

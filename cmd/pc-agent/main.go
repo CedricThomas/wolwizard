@@ -14,13 +14,19 @@ import (
 	"github.com/CedricThomas/console/internal/input/async/subscriptions"
 	"github.com/CedricThomas/console/internal/input/cron/jobs"
 	cronrobfig "github.com/CedricThomas/console/internal/input/cron/robfig"
+	"github.com/CedricThomas/console/internal/input/web/fiber/middleware"
+	"github.com/CedricThomas/console/internal/input/web/fiber/router"
 	serviceasync "github.com/CedricThomas/console/internal/service/async/redis"
 	"github.com/CedricThomas/console/internal/service/command"
 	"github.com/CedricThomas/console/internal/service/command/linux"
 	"github.com/CedricThomas/console/internal/service/command/windows"
+	rediskeystore "github.com/CedricThomas/console/internal/service/keystore/redis"
 	"github.com/CedricThomas/console/internal/service/metrics"
 	metricslinux "github.com/CedricThomas/console/internal/service/metrics/linux"
 	metricswindows "github.com/CedricThomas/console/internal/service/metrics/windows"
+	"github.com/CedricThomas/console/internal/service/token/jwt"
+	"github.com/CedricThomas/console/internal/usecase/auth/base"
+	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
@@ -68,7 +74,8 @@ func main() {
 	}
 
 	// Initialize controllers
-	pcAgentController := controller.NewPCAgentController(executor, collector, publisher)
+	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.JWTSecret, cfg.JWTExpiryHours))
+	pcAgentController := controller.NewPCAgentController(executor, collector, publisher, authCtrl)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterPCAgent(ctx, consumer, pcAgentController)
@@ -93,6 +100,23 @@ func main() {
 	cronService.Start()
 
 	log.Println("PC agent listening for async commands...")
+
+	// Start http server for registration
+	httpServer := fiber.New()
+
+	router.RegisterPCAgentRoutes(httpServer, pcAgentController)
+
+	// Register logging middleware
+	httpServer.Use(middleware.LoggerMiddleware())
+
+	listenAddr := "0.0.0.0:" + cfg.Port
+	log.Printf("Starting pc-agent web server on %s", listenAddr)
+
+	go func() {
+		if err := httpServer.Listen(listenAddr); err != nil {
+			log.Printf("Failed to start web server: %v", err)
+		}
+	}()
 
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)

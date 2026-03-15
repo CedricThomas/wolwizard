@@ -27,7 +27,12 @@ type RaspberryAgent interface {
 	WakeUpPCAgent(ctx context.Context, osName domain.OSName) error
 }
 
+type Register interface {
+	CreateAccount(ctx context.Context, username, password string) error
+}
+
 type PCAgent interface {
+	Register
 	ShutdownCurrentHost(ctx context.Context) error
 	SendCurrentHostAsyncMetrics(ctx context.Context) error
 }

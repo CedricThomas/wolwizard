@@ -11,6 +11,7 @@ import (
 	controller "github.com/CedricThomas/console/internal/controller/base"
 	redisin "github.com/CedricThomas/console/internal/input/async/redis"
 	"github.com/CedricThomas/console/internal/input/async/subscriptions"
+	"github.com/CedricThomas/console/internal/input/web/fiber/middleware"
 	"github.com/CedricThomas/console/internal/input/web/fiber/router"
 	redisasync "github.com/CedricThomas/console/internal/service/async/redis"
 	rediskeystore "github.com/CedricThomas/console/internal/service/keystore/redis"
@@ -67,6 +68,9 @@ func main() {
 
 	// Configure and start the Fiber web server
 	httpServer := fiber.New()
+
+	// Register logging middleware
+	httpServer.Use(middleware.LoggerMiddleware())
 
 	// Register all routes (includes CORS, auth, static files)
 	router.RegisterWebRoutes(httpServer, webController)
