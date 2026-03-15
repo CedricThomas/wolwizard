@@ -14,9 +14,9 @@ import (
 	"github.com/CedricThomas/console/internal/input/web/fiber/router"
 	redisasync "github.com/CedricThomas/console/internal/service/async/redis"
 	rediskeystore "github.com/CedricThomas/console/internal/service/keystore/redis"
+	jwttoken "github.com/CedricThomas/console/internal/service/token/jwt"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
 )
 
 func main() {
@@ -45,9 +45,10 @@ func main() {
 	publisher := redisasync.NewRedisPublisher(redisClient)
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 	consumer := redisin.NewRedisConsumer(redisClient)
+	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpiryHours)
 
 	// Initialize the web controller with dependencies
-	webController := controller.NewWebController(publisher, keystore)
+	webController := controller.NewWebController(publisher, keystore, tokenService)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterWeb(ctx, consumer, webController)
@@ -65,26 +66,13 @@ func main() {
 	}
 
 	// Configure and start the Fiber web server
-	app := fiber.New()
-	app.Use(cors.New()) // Enable CORS for cross-origin requests
+	httpServer := fiber.New()
 
-	// Define API routes
-	api := app.Group("/api")
-	router.RegisterWebRoutes(api, webController)
-
-	// Serve index.html for root route
-	app.Get("/", func(c fiber.Ctx) error {
-		return c.SendFile("./static/index.html")
-	})
-
-	// Serve static files from /static route
-	app.Get("/static/*", func(c fiber.Ctx) error {
-		filePath := "./static/" + c.Params("*", "")
-		return c.SendFile(filePath)
-	})
+	// Register all routes (includes CORS, auth, static files)
+	router.RegisterWebRoutes(httpServer, webController)
 
 	// Start the server on the configured port
 	listenAddr := ":" + cfg.Port
 	log.Println("Starting web server on", listenAddr)
-	log.Fatal(app.Listen(listenAddr))
+	log.Fatal(httpServer.Listen(listenAddr))
 }

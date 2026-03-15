@@ -10,20 +10,25 @@ import (
 	asyncapi "github.com/CedricThomas/console/internal/input/async/api"
 	"github.com/CedricThomas/console/internal/service/async"
 	"github.com/CedricThomas/console/internal/service/keystore"
+	"github.com/CedricThomas/console/internal/service/token"
 )
 
 type web struct {
+	auth
 	publisher async.Publisher
 	keystore  keystore.Keystore
 }
 
-func NewWebController(publisher async.Publisher, keystore keystore.Keystore) controller.Web {
+func NewWebController(publisher async.Publisher, keystore keystore.Keystore, tokenSrv token.Service) controller.Web {
+	authCtrl := newAuthController(keystore, tokenSrv)
 	return &web{
+		auth:      authCtrl,
 		publisher: publisher,
 		keystore:  keystore,
 	}
 }
 
+// Web controller methods
 func (w web) SendAsyncBootCommand(ctx context.Context, osName domain.OSName) error {
 	// Publish boot command to Redis pubsub channel
 	bootCmd := asyncapi.BootCommand{OSName: osName}
@@ -46,6 +51,5 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 
 func (w web) ProcessMetrics(_ context.Context, metrics domain.Metrics) error {
 	log.Printf("Received metrics: OS %s, CPU %.2f%%, Memory %.2f%%, VRAM %.2f%%\n", metrics.OS, metrics.CPUUsage, metrics.MemoryUsage, metrics.VRAMUsage)
-
 	return nil
 }

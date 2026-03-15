@@ -9,6 +9,8 @@ import (
 
 type Config struct {
 	RedisURL                 string           `env:"REDIS_URL,required"`
+	JWTSecret                string           `env:"JWT_SECRET"`
+	JWTExpiryHours           int              `env:"JWT_EXPIRY_HOURS" envDefault:"24"`
 	ServerMACAddressStr      string           `env:"SERVER_MAC_ADDRESS"`
 	ServerMACAddress         net.HardwareAddr `env:"-"` // Parsed from SERVER_MAC_ADDRESS
 	ServerNetworkAddressStr  string           `env:"SERVER_NETWORK_ADDRESS"`
