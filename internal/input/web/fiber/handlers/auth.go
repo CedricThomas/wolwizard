@@ -39,9 +39,9 @@ func Verify(webCtrl controller.Web) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		username, ok := c.Locals("username").(string)
 		if !ok || username == "" {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("invalid token")))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("cannot extract username from context")))
 		}
 
-		return c.JSON(presenters.AuthVerifySuccess())
+		return c.JSON(presenters.AuthVerifySuccess(username))
 	}
 }

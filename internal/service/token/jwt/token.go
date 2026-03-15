@@ -14,10 +14,10 @@ type jwtService struct {
 	expiry    time.Duration
 }
 
-func New(secretKey string, expiryHours int) token.Service {
+func New(secretKey string, expirySeconds int) token.Service {
 	return &jwtService{
 		secretKey: secretKey,
-		expiry:    time.Duration(expiryHours) * time.Hour,
+		expiry:    time.Duration(expirySeconds) * time.Second,
 	}
 }
 
@@ -38,19 +38,20 @@ func (j *jwtService) Sign(ctx context.Context, subject string) (string, time.Dur
 }
 
 func (j *jwtService) Verify(ctx context.Context, tokenStr string) (string, bool, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 		}
 		return []byte(j.secretKey), nil
 	})
-
 	if err != nil {
 		return "", false, err
 	}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if subject, ok := claims["sub"].(string); ok {
+	if token.Valid {
+		subject, ok := claims["sub"].(string)
+		if ok {
 			return subject, true, nil
 		}
 	}

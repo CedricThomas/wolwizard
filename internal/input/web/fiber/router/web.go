@@ -19,7 +19,7 @@ func RegisterWebRoutes(app fiber.Router, webCtrl controller.Web) {
 	// Public routes
 	public := app.Group("")
 	public.Post("/auth/login", handlers.Login(webCtrl))
-	public.Get("/auth/verify", handlers.Verify(webCtrl))
+	public.Get("/auth/verify", authMiddleware, handlers.Verify(webCtrl))
 
 	// API routes (require authentication)
 	api := app.Group("/api")

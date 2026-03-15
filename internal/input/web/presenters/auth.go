@@ -9,6 +9,11 @@ type ErrorResponse struct {
 	Error  string `json:"error"`
 }
 
+type AuthVerifyResponse struct {
+	Valid    bool   `json:"status"`
+	Username string `json:"username"`
+}
+
 func AuthSuccess(token string) AuthResponse {
 	return AuthResponse{
 		Token: token,
@@ -22,8 +27,9 @@ func AuthError(err error) ErrorResponse {
 	}
 }
 
-func AuthVerifySuccess() AuthResponse {
-	return AuthResponse{
-		Token: "valid",
+func AuthVerifySuccess(username string) AuthVerifyResponse {
+	return AuthVerifyResponse{
+		Valid:    true,
+		Username: username,
 	}
 }

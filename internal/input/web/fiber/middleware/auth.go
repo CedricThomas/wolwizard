@@ -24,7 +24,7 @@ func AuthMiddleware(authCtrl controller.Auth) fiber.Handler {
 
 		username, err := authCtrl.ValidateToken(c.Context(), token)
 		if err != nil {
-			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(err))
+			return c.Status(http.StatusUnauthorized).JSON(presenters.AuthError(errors.New("invalid token")))
 		}
 
 		c.Locals("username", username)

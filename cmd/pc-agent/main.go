@@ -74,7 +74,7 @@ func main() {
 	}
 
 	// Initialize controllers
-	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.JWTSecret, cfg.JWTExpiryHours))
+	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.JWTSecret, cfg.JWTExpirySeconds))
 	pcAgentController := controller.NewPCAgentController(executor, collector, publisher, authCtrl)
 
 	// Register async subscriptions

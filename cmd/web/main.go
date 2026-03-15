@@ -46,7 +46,7 @@ func main() {
 	publisher := redisasync.NewRedisPublisher(redisClient)
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 	consumer := redisin.NewRedisConsumer(redisClient)
-	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpiryHours)
+	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpirySeconds)
 
 	// Initialize the web controller with dependencies
 	webController := controller.NewWebController(publisher, keystore, tokenService)
