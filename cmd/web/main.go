@@ -47,9 +47,10 @@ func main() {
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 	consumer := redisin.NewRedisConsumer(redisClient)
 	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpirySeconds)
+	wsManager := websocket.NewWebSocketManager()
 
 	// Initialize the web controller with dependencies
-	webController := controller.NewWebController(publisher, keystore, tokenService)
+	webController := controller.NewWebController(publisher, keystore, tokenService, cfg, wsManager)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterWeb(ctx, consumer, webController)

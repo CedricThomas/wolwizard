@@ -5,26 +5,33 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/domain"
 	asyncapi "github.com/CedricThomas/console/internal/input/async/api"
 	"github.com/CedricThomas/console/internal/service/async"
 	"github.com/CedricThomas/console/internal/service/keystore"
 	"github.com/CedricThomas/console/internal/service/token"
+	"github.com/CedricThomas/console/internal/service/websocket"
+	metricsusecase "github.com/CedricThomas/console/internal/usecase/metrics"
+	metricsusecasebase "github.com/CedricThomas/console/internal/usecase/metrics/base"
 )
 
 type web struct {
 	auth
-	publisher async.Publisher
-	keystore  keystore.Keystore
+	publisher      async.Publisher
+	keystore       keystore.Keystore
+	metricsUsecase metricsusecase.Metrics
 }
 
-func NewWebController(publisher async.Publisher, keystore keystore.Keystore, tokenSrv token.Service) controller.Web {
+func NewWebController(publisher async.Publisher, keystore keystore.Keystore, tokenSrv token.Service, cfg *config.Config, wsManager websocket.Manager) controller.Web {
 	authCtrl := newAuthController(keystore, tokenSrv)
+	metricsUsecase := metricsusecasebase.New(keystore, cfg, wsManager)
 	return &web{
-		auth:      authCtrl,
-		publisher: publisher,
-		keystore:  keystore,
+		auth:           authCtrl,
+		publisher:      publisher,
+		keystore:       keystore,
+		metricsUsecase: metricsUsecase,
 	}
 }
 
@@ -49,7 +56,10 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 	return nil
 }
 
-func (w web) ProcessMetrics(_ context.Context, metrics domain.Metrics) error {
+func (w web) ProcessMetrics(ctx context.Context, metrics domain.Metrics) error {
 	log.Printf("Received metrics: OS %s, CPU %.2f%%, Memory %.2f%%, VRAM %.2f%%\n", metrics.OS, metrics.CPUUsage, metrics.MemoryUsage, metrics.VRAMUsage)
+	if err := w.metricsUsecase.ProcessMetrics(ctx, metrics); err != nil {
+		return fmt.Errorf("process metrics: %w", err)
+	}
 	return nil
 }
