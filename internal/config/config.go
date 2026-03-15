@@ -17,6 +17,7 @@ type Config struct {
 	ServerNetworkAddress     *net.UDPAddr     `env:"-"` // Parsed from SERVER_NETWORK_ADDRESS
 	Port                     string           `env:"PORT"`
 	MetricsReportingSchedule string           `env:"METRICS_REPORTING_SCHEDULE" envDefault:"@every 5s"`
+	LastMetricsKeyTTLSeconds int              `env:"LAST_METRICS_KEY_TTL_SECONDS" envDefault:"5"`
 }
 
 // New creates a new Config instance with values from the environment
