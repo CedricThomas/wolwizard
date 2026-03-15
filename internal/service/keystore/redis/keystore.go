@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/CedricThomas/console/internal/service/keystore"
 
@@ -32,6 +33,10 @@ func (r *redisKeystore) Get(ctx context.Context, key string) (string, error) {
 
 func (r *redisKeystore) Set(ctx context.Context, key string, value string) error {
 	return r.client.Set(ctx, key, value, 0).Err()
+}
+
+func (r *redisKeystore) SetWithTTL(ctx context.Context, key string, value string, ttl time.Duration) error {
+	return r.client.Set(ctx, key, value, ttl).Err()
 }
 
 func (r *redisKeystore) Delete(ctx context.Context, key string) error {

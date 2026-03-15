@@ -21,7 +21,7 @@ func New(secretKey string, expiryHours int) token.Service {
 	}
 }
 
-func (j *jwtService) Sign(ctx context.Context, subject string) (string, error) {
+func (j *jwtService) Sign(ctx context.Context, subject string) (string, time.Duration, error) {
 	claims := jwt.MapClaims{
 		"sub": subject,
 		"iat": time.Now().Unix(),
@@ -31,10 +31,10 @@ func (j *jwtService) Sign(ctx context.Context, subject string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(j.secretKey))
 	if err != nil {
-		return "", fmt.Errorf("sign token: %w", err)
+		return "", 0, fmt.Errorf("sign token: %w", err)
 	}
 
-	return signedToken, nil
+	return signedToken, j.expiry, nil
 }
 
 func (j *jwtService) Verify(ctx context.Context, tokenStr string) (string, bool, error) {

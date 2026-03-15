@@ -110,12 +110,12 @@ func (a *authUsecase) GenerateToken(ctx context.Context, username string) (strin
 		return "", fmt.Errorf("user not found")
 	}
 
-	tokenStr, err := a.tokenSrv.Sign(ctx, username)
+	tokenStr, expiry, err := a.tokenSrv.Sign(ctx, username)
 	if err != nil {
 		return "", fmt.Errorf("sign token: %w", err)
 	}
 
-	err = a.keystore.Set(ctx, a.tokenKey(tokenStr), username)
+	err = a.keystore.SetWithTTL(ctx, a.tokenKey(tokenStr), username, expiry)
 	if err != nil {
 		return "", fmt.Errorf("store token: %w", err)
 	}
