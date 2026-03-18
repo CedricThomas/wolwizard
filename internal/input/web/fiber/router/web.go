@@ -4,12 +4,13 @@ import (
 	"github.com/CedricThomas/console/internal/controller"
 	"github.com/CedricThomas/console/internal/input/web/fiber/handlers"
 	"github.com/CedricThomas/console/internal/input/web/fiber/middleware"
+	"github.com/CedricThomas/console/internal/service/websocket"
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 )
 
 // RegisterWebRoutes configures and registers all web routes
-func RegisterWebRoutes(app fiber.Router, webCtrl controller.Web) {
+func RegisterWebRoutes(app fiber.Router, webCtrl controller.Web, wsManager websocket.Manager) {
 	// Configure CORS middleware
 	app.Use(cors.New())
 
@@ -26,6 +27,12 @@ func RegisterWebRoutes(app fiber.Router, webCtrl controller.Web) {
 	api.Use(authMiddleware)
 	api.Post("/boot", handlers.BootSelectedOS(webCtrl))
 	api.Post("/shutdown", handlers.ShutdownHandler(webCtrl))
+
+	// WebSocket route (requires authentication)
+	app.Get("/ws/:agent_id",
+		authMiddleware,
+		handlers.WebSocketHandler(wsManager),
+	)
 
 	// Root route - serve index.html
 	app.Get("/", func(c fiber.Ctx) error {

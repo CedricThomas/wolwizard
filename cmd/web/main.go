@@ -16,6 +16,7 @@ import (
 	redisasync "github.com/CedricThomas/console/internal/service/async/redis"
 	rediskeystore "github.com/CedricThomas/console/internal/service/keystore/redis"
 	jwttoken "github.com/CedricThomas/console/internal/service/token/jwt"
+	websocketbase "github.com/CedricThomas/console/internal/service/websocket/base"
 
 	"github.com/gofiber/fiber/v3"
 )
@@ -47,7 +48,11 @@ func main() {
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 	consumer := redisin.NewRedisConsumer(redisClient)
 	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpirySeconds)
-	wsManager := websocket.NewWebSocketManager()
+	wsManager := websocketbase.New()
+
+	// Start WebSocket manager
+	wsManager.Start()
+	defer wsManager.Shutdown()
 
 	// Initialize the web controller with dependencies
 	webController := controller.NewWebController(publisher, keystore, tokenService, cfg, wsManager)
@@ -74,7 +79,7 @@ func main() {
 	httpServer.Use(middleware.LoggerMiddleware())
 
 	// Register all routes (includes CORS, auth, static files)
-	router.RegisterWebRoutes(httpServer, webController)
+	router.RegisterWebRoutes(httpServer, webController, wsManager)
 
 	// Start the server on the configured port
 	listenAddr := ":" + cfg.Port
