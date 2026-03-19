@@ -1,77 +1,44 @@
 # Console Development Guide
 
+A Go-based Clean Architecture console for managing PC and Raspberry Pi agents via Redis pub/sub.
+
 ## Build & Test Commands
 
-### Docker-Based Development
-
+### Docker Development
 ```bash
-# Build all services (web, pc-agent, raspberry-agent)
+# Build all services
 docker compose build
 
-# Build a specific service
-docker compose build web
-docker compose build pc-agent
-docker compose build raspberry-agent
-
-# Start all services with hot reload
-docker compose up --watch
-
-# Start a specific service with hot reload
+# Start with hot reload
 docker compose up --watch web
-docker compose up --watch pc-agent
-docker compose up --watch raspberry-agent
 
-# Start services in detached mode
-docker compose up -d --build
-
-# Stop all services
+# Stop services
 docker compose down
 
-# Stop and remove volumes
-docker compose down -v
-
 # View logs
-docker compose logs -f
 docker compose logs -f web
-docker compose logs -f pc-agent
 
-# Access a running container
-docker compose exec web sh
-docker compose exec redis redis-cli -a ${REDIS_PASSWORD}
-
-# Rebuild after code changes
+# Rebuild after changes
 docker compose build --no-cache
 ```
 
-### Native Go Commands (for local testing)
-
+### Native Go Commands
 ```bash
-# Build all targets
+# Build
 go build ./...
 
 # Run all tests
 go test ./...
 
-# Run a single test file
-go test ./path/to/file_test.go
-
-# Run a specific test function
+# Run specific test
 go test -run TestFunctionName ./...
 
-# Run tests with race detection
-go test -race ./...
-
-# Run tests with verbose output
-go test -v ./...
-
-# Generate coverage report
+# Test with coverage
 go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out
 
-# Validate code
+# Validate & tidy
 go vet ./...
-
-# Tidy dependencies
 go mod tidy
 ```
 
@@ -79,16 +46,14 @@ go mod tidy
 
 ```
 internal/
-  controller/      # Controller interfaces (public API contracts)
+  controller/      # Public API interfaces
   controller/base/ # Controller implementations
-  usecase/         # Use case interfaces (business logic contracts)
+  usecase/         # Business logic interfaces
   usecase/*/base/  # Use case implementations
-  service/         # Service interfaces and implementations
-  domain/          # Domain entities and types
-  input/           # Input layers (web handlers, async consumers)
+  service/         # Service interfaces & implementations
+  domain/          # Domain entities
+  input/           # Web handlers, async consumers, cron
   config/          # Configuration management
-  service/keystore/redis/  # Keystore implementations
-  service/token/jwt/       # Token service implementations
 ```
 
 Follow **Clean Architecture**: controllers depend on usecases, usecases depend on services, services depend on domain.
@@ -96,11 +61,12 @@ Follow **Clean Architecture**: controllers depend on usecases, usecases depend o
 ## Code Style Guidelines
 
 ### Imports
-Order imports: standard library, then external, then local. Group with blank lines:
+Order: standard library, external, local. Separate groups with blank lines:
 ```go
 import (
     "context"
     "fmt"
+    "net"
 
     "github.com/caarlos0/env/v11"
 
@@ -109,36 +75,38 @@ import (
 ```
 
 ### Naming Conventions
-- Use `camelCase` for functions, variables, and struct fields
-- Use `PascalCase` for types, interfaces, and exported symbols
-- Interface names: single verb (e.g., `Metrics`, `Publisher`, `Consumer`, `Keystore`) _without_ `er` suffix
-- Interface implementations: lowercase with struct name matching interface (e.g., `type metrics struct{}`)
-- Constructor functions: `NewXxx` for public constructors, lowercase `newXxx` for private
-- Embed interfaces to compose functionality (e.g., `type web struct{ auth }`)
+- `camelCase`: functions, variables, struct fields
+- `PascalCase`: types, interfaces, exported symbols
+- Interfaces: single verb without `-er` suffix (`Metrics`, `Publisher`, `Keystore`)
+- Implementations: lowercase, same name (`type metrics struct{}`)
+- Constructors: `NewXxx` (public), `newXxx` (private)
+- Embed interfaces to compose: `type web struct{ auth }`
 
 ### Types & Structs
-- Define structs with private fields in `base` packages
-- Use explicit struct tags for JSON/env parsing
+- Private fields in `base` packages
+- Use struct tags for JSON/env parsing
 - Domain types live only in `internal/domain/`
 
 ```go
-type Metrics struct {
-    OS          OSName
-    CPUUsage    float64
-    VRAMUsage   float64
-    MemoryUsage float64
+type Config struct {
+    RedisURL     string `env:"REDIS_URL,required"`
+    JWTSecret    string `env:"JWT_SECRET"`
+    Port         string `env:"PORT" envDefault:"3000"`
+    MACAddress   net.HardwareAddr `env:"-"`
 }
 ```
 
 ### Error Handling
-Wrap errors with context using `%w`:
+Wrap errors with context using `%w`. First param is `context.Context`:
 ```go
-if err := w.publisher.Publish(ctx, asyncapi.BootChannel, bootCmd); err != nil {
-    return fmt.Errorf("publish boot command: %w", err)
+func (w web) SendAsyncBootCommand(ctx context.Context, osName domain.OSName) error {
+    bootCmd := asyncapi.BootCommand{OSName: osName}
+    if err := w.publisher.Publish(ctx, asyncapi.BootChannel, bootCmd); err != nil {
+        return fmt.Errorf("publish boot command: %w", err)
+    }
+    return nil
 }
 ```
-
-Use `context.Context` as first parameter for all functions that perform I/O.
 
 ### Validation
 Add `Validate()` methods to request structs:
@@ -156,69 +124,50 @@ func (r LoginRequest) Validate() error {
 }
 ```
 
-### Middleware
-Implement Fiber middleware as factory functions:
+### Fiber Middleware
+Factory functions returning `fiber.Handler`:
 ```go
 func LoggerMiddleware() fiber.Handler {
     return func(c fiber.Ctx) error {
         start := time.Now()
         err := c.Next()
-        duration := time.Since(start)
-        log.Printf("[%s] %s %s %d - %v", time.Now().Format(time.RFC3339), c.Method(), c.Path(), c.Response().StatusCode(), duration)
+        log.Printf("%s %s %d - %v", c.Method(), c.Path(), c.Response().StatusCode(), time.Since(start))
         return err
     }
 }
 ```
 
-### Configuration
-Use environment variables with `github.com/caarlos0/env/v11`:
-```go
-type Config struct {
-    RedisURL     string `env:"REDIS_URL,required"`
-    JWTSecret    string `env:"JWT_SECRET"`
-    Port         string `env:"PORT" envDefault:"3000"`
-}
-```
+## Services & Interfaces
 
-### Async & Redis
-- Publisher interface: `Publish(ctx, channel, message)`
-- Consumer interface: `Subscribe(ctx, channel, callback)` returns unsubscribe function
-- Use Redis for both caching and pub/sub messaging
+### Redis (Pub/Sub)
+- `Publisher.Publish(ctx, channel, message)`
+- `Consumer.Subscribe(ctx, channel, callback)` returns `unsubscribe func()`
 
 ### Authentication
-Store password hashes with `bcrypt` from `golang.org/x/crypto`
-Generate/verify JWT tokens with `github.com/golang-jwt/jwt/v5`
-```
+- Password hashing: `golang.org/x/crypto/bcrypt`
+- JWT tokens: `github.com/golang-jwt/jwt/v5`
 
-## Running the Application
+### WebSocket
+- Use `github.com/gofiber/contrib/websocket` for WS connections
+- Manager interface handles connections per client
 
-```bash
-# Set required environment variables
-export REDIS_URL="redis://localhost:6379"
-export JWT_SECRET="your-secret-key"
-export PORT="3000"
-
-# Run web server
-go run ./cmd/web
-
-# Run PC agent
-go run ./cmd/pc-agent
-
-# Run Raspberry agent  
-go run ./cmd/raspberry-agent
-```
-
-## Dependencies
-
-Key dependencies from `go.mod`:
+## Key Dependencies
 - `github.com/gofiber/fiber/v3` - Web framework
 - `github.com/redis/go-redis/v9` - Redis client
 - `github.com/golang-jwt/jwt/v5` - JWT handling
-- `golang.org/x/crypto` - bcrypt password hashing
+- `golang.org/x/crypto` - bcrypt
 - `github.com/caarlos0/env/v11` - Environment config
 - `github.com/robfig/cron/v3` - Cron scheduling
 
+## Running
+```bash
+docker compose up -d
+```
+
 ## Rules
-
-- Always rebuild the containers when the task is over
-
+- Always rebuild Docker containers after completing tasks:
+  ```bash
+  docker compose build --no-cache
+  docker compose up --watch
+  ```
+}
