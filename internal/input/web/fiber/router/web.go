@@ -28,11 +28,8 @@ func RegisterWebRoutes(app fiber.Router, webCtrl controller.Web, wsManager webso
 	api.Post("/boot", handlers.BootSelectedOS(webCtrl))
 	api.Post("/shutdown", handlers.ShutdownHandler(webCtrl))
 
-	// WebSocket route (requires authentication)
-	app.Get("/ws/:agent_id",
-		authMiddleware,
-		handlers.WebSocketHandler(wsManager),
-	)
+	// WebSocket route (public endpoint - auth via handshake)
+	app.Get("/ws/:sessionID", handlers.WebSocketHandler(wsManager, webCtrl))
 
 	// Root route - serve index.html
 	app.Get("/", func(c fiber.Ctx) error {

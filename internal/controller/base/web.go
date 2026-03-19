@@ -3,7 +3,6 @@ package base
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/controller"
@@ -57,7 +56,6 @@ func (w web) SendAsyncShutdownCommand(ctx context.Context) error {
 }
 
 func (w web) ProcessMetrics(ctx context.Context, metrics domain.Metrics) error {
-	log.Printf("Received metrics: OS %s, CPU %.2f%%, Memory %.2f%%, VRAM %.2f%%\n", metrics.OS, metrics.CPUUsage, metrics.MemoryUsage, metrics.VRAMUsage)
 	if err := w.metricsUsecase.ProcessMetrics(ctx, metrics); err != nil {
 		return fmt.Errorf("process metrics: %w", err)
 	}

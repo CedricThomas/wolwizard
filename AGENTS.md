@@ -217,3 +217,8 @@ Key dependencies from `go.mod`:
 - `golang.org/x/crypto` - bcrypt password hashing
 - `github.com/caarlos0/env/v11` - Environment config
 - `github.com/robfig/cron/v3` - Cron scheduling
+
+## Rules
+
+- Always rebuild the containers when the task is over
+

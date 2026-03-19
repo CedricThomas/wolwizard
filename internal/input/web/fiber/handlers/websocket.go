@@ -2,8 +2,11 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"time"
 
+	"github.com/CedricThomas/console/internal/controller"
 	"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v3"
 
@@ -15,16 +18,12 @@ var upgrader = websocket.FastHTTPUpgrader{
 	WriteBufferSize: 1024,
 }
 
-func WebSocketHandler(manager ws.Manager) fiber.Handler {
+func WebSocketHandler(manager ws.Manager, authCtrl controller.Auth) fiber.Handler {
 	return func(c fiber.Ctx) error {
-		agentID := c.Params("agent_id")
-		username := "anonymous"
-		if u, ok := c.Locals("username").(string); ok {
-			username = u
-		}
+		sessionID := c.Params("sessionID")
 
 		err := upgrader.Upgrade(c.RequestCtx(), func(conn *websocket.Conn) {
-			handle(c.Context(), conn, agentID, username, manager)
+			handle(c.Context(), conn, sessionID, authCtrl, manager)
 		})
 		if err != nil {
 			log.Printf("WebSocket upgrade error: %v", err)
@@ -35,24 +34,67 @@ func WebSocketHandler(manager ws.Manager) fiber.Handler {
 	}
 }
 
-func handle(ctx context.Context, conn *websocket.Conn, agentID, username string, manager ws.Manager) {
+type authMessage struct {
+	Token string `json:"token"`
+}
+
+func handle(ctx context.Context, conn *websocket.Conn, sessionID string, authCtrl controller.Auth, manager ws.Manager) {
+	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+
+	msgType, message, err := conn.ReadMessage()
+	if err != nil {
+		log.Printf("WebSocket: failed to read auth for %s: %v", sessionID, err)
+		conn.Close()
+		return
+	}
+
+	if msgType != websocket.TextMessage {
+		log.Printf("WebSocket: expected text message for auth, got type %d", msgType)
+		conn.Close()
+		return
+	}
+
+	var authMsg authMessage
+	if err := json.Unmarshal(message, &authMsg); err != nil {
+		log.Printf("WebSocket: invalid auth message for %s: %v", sessionID, err)
+		conn.Close()
+		return
+	}
+
+	if authMsg.Token == "" {
+		log.Printf("WebSocket: missing token for %s", sessionID)
+		conn.Close()
+		return
+	}
+
+	username, err := authCtrl.ValidateToken(ctx, authMsg.Token)
+	if err != nil {
+		log.Printf("WebSocket: invalid token for %s: %v", sessionID, err)
+		conn.Close()
+		return
+	}
+
+	log.Printf("WebSocket: auth successful for %s (user: %s)", sessionID, username)
+
 	client := &ws.Client{
-		ID:       agentID,
+		ID:       sessionID,
 		Conn:     conn,
 		Send:     make(chan []byte, 256),
 		Username: username,
 	}
 
 	log.Printf("WebSocket: connected %s (user: %s) | total: %d",
-		agentID, username, manager.ClientCount()+1)
+		sessionID, username, manager.ClientCount()+1)
 
 	manager.Register(client)
+
+	conn.SetReadDeadline(time.Time{})
 
 	defer func() {
 		manager.Unregister(client)
 		conn.Close()
 		log.Printf("WebSocket: disconnected %s (user: %s) | total: %d",
-			agentID, username, manager.ClientCount())
+			sessionID, username, manager.ClientCount())
 	}()
 
 	conn.SetPingHandler(func(appData string) error {
@@ -62,7 +104,7 @@ func handle(ctx context.Context, conn *websocket.Conn, agentID, username string,
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
 			if !websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-				log.Printf("WebSocket error for %s: %v", agentID, err)
+				log.Printf("WebSocket error for %s: %v", sessionID, err)
 			}
 			break
 		}
