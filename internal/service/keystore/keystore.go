@@ -1,5 +1,6 @@
 package keystore
 
+//go:generate mockgen -source=keystore.go -destination=mock/keystore.go -package=mock -mock_names=Keystore=MockKeystore
 import (
 	"context"
 	"time"

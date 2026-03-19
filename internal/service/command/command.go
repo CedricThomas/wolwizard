@@ -1,5 +1,6 @@
 package command
 
+//go:generate mockgen -source=command.go -destination=mock/command.go -package=mock -mock_names=CommandExecutor=MockCommandExecutor,PlatformExecutor=MockPlatformExecutor
 import (
 	"context"
 )

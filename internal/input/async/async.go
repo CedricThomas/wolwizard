@@ -1,5 +1,6 @@
 package async
 
+//go:generate mockgen -source=async.go -destination=mock/consumer.go -package=mock -mock_names=Consumer=MockConsumer
 import (
 	"context"
 )

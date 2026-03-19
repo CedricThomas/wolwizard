@@ -14,15 +14,6 @@ github.com/dgryski/go-rendezvous
 # github.com/fasthttp/websocket v1.5.8
 ## explicit; go 1.20
 github.com/fasthttp/websocket
-# github.com/gofiber/contrib/websocket v1.3.4
-## explicit; go 1.18
-github.com/gofiber/contrib/websocket
-# github.com/gofiber/fiber/v2 v2.52.6
-## explicit; go 1.20
-github.com/gofiber/fiber/v2
-github.com/gofiber/fiber/v2/internal/schema
-github.com/gofiber/fiber/v2/log
-github.com/gofiber/fiber/v2/utils
 # github.com/gofiber/fiber/v3 v3.1.0
 ## explicit; go 1.25.0
 github.com/gofiber/fiber/v3
@@ -64,9 +55,6 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.20
 ## explicit; go 1.15
 github.com/mattn/go-isatty
-# github.com/mattn/go-runewidth v0.0.16
-## explicit; go 1.9
-github.com/mattn/go-runewidth
 # github.com/philhofer/fwd v1.2.0
 ## explicit; go 1.20
 github.com/philhofer/fwd
@@ -88,9 +76,6 @@ github.com/redis/go-redis/v9/internal/routing
 github.com/redis/go-redis/v9/internal/util
 github.com/redis/go-redis/v9/maintnotifications
 github.com/redis/go-redis/v9/push
-# github.com/rivo/uniseg v0.2.0
-## explicit; go 1.12
-github.com/rivo/uniseg
 # github.com/robfig/cron/v3 v3.0.1
 ## explicit; go 1.12
 github.com/robfig/cron/v3
@@ -114,13 +99,16 @@ github.com/valyala/fasthttp/tcplisten
 # go.uber.org/atomic v1.11.0
 ## explicit; go 1.18
 go.uber.org/atomic
+# go.uber.org/mock v0.6.0
+## explicit; go 1.23.0
+go.uber.org/mock/gomock
 # golang.org/x/crypto v0.49.0
 ## explicit; go 1.25.0
 golang.org/x/crypto/acme
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
-# golang.org/x/net v0.51.0
+# golang.org/x/net v0.52.0
 ## explicit; go 1.25.0
 golang.org/x/net/idna
 golang.org/x/net/internal/socks

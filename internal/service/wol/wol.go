@@ -1,5 +1,6 @@
 package wol
 
+//go:generate mockgen -source=wol.go -destination=mock/wol.go -package=mock -mock_names=Sender=MockSender
 import (
 	"context"
 	"errors"

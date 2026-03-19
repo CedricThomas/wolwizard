@@ -1,5 +1,7 @@
 package websocket
 
+//go:generate mockgen -source=websocket.go -destination=mock/manager.go -package=mock -mock_names=Manager=MockManager
+
 // Client represents a WebSocket client connection
 type Client struct {
 	ID       string

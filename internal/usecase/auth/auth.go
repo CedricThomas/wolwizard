@@ -1,5 +1,6 @@
 package auth
 
+//go:generate mockgen -source=auth.go -destination=mock/auth.go -package=mock -mock_names=Auth=MockAuth
 import "context"
 
 type Auth interface {

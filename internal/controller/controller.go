@@ -1,5 +1,6 @@
 package controller
 
+//go:generate mockgen -source=controller.go -destination=mock/controller.go -package=mock -mock_names=Auth=MockAuth,Web=MockWeb,RaspberryAgent=MockRaspberryAgent,Register=MockRegister,PCAgent=MockPCAgent
 import (
 	"context"
 

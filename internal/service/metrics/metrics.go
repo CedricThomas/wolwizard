@@ -1,5 +1,6 @@
 package metrics
 
+//go:generate mockgen -source=metrics.go -destination=mock/collector.go -package=mock -mock_names=Collector=MockCollector
 import (
 	"context"
 

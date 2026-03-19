@@ -1,5 +1,6 @@
 package token
 
+//go:generate mockgen -source=token.go -destination=mock/token.go -package=mock -mock_names=Service=MockService
 import (
 	"context"
 	"time"
