@@ -42,6 +42,52 @@ go vet ./...
 go mod tidy
 ```
 
+## Mock Generation
+
+Interface packages use `go:generate` directives to automatically generate mocks using [`mockgen`](https://pkg.go.dev/go.uber.org/mock/mockgen).
+
+### Prerequisites
+
+Install `mockgen` once (usually handled by dependabot or CI):
+```bash
+go install go.uber.org/mock/mockgen@latest
+```
+
+### When to Generate Mocks
+
+- **After adding new interface methods** - Mocks are out of sync
+- **Before writing unit tests** - Need fresh mocks for testing
+- **After refactoring interfaces** - Update generated code
+
+### Generate All Mocks
+```bash
+go generate ./...
+```
+
+### Generate for Specific Packages
+```bash
+# Service mocks
+go generate ./internal/service/...
+
+# Use case mocks
+go generate ./internal/usecase/...
+
+# Controller mocks
+go generate ./internal/controller
+
+# Input async mocks
+go generate ./internal/input/async
+```
+
+### How It Works
+
+Each interface file has a `//go:generate` directive at the top:
+```go
+//go:generate mockgen -source=auth.go -destination=mock/auth.go -package=mock -mock_names=Auth=MockAuth
+```
+
+Running `go generate` executes these directives, updating mock files in each package's `mock/` subdirectory. Mock files are auto-generated and should not be edited manually.
+
 ## Project Structure
 
 ```
