@@ -14,7 +14,7 @@ func RegisterPCAgent(
 	ctx context.Context,
 	scheduler cron.Scheduler,
 	pcAgentContoller controller.PCAgent,
-	cfg *config.Config,
+	cfg *config.PcAgentConfig,
 ) error {
 	job := &cron.Job{
 		Name:     "metrics-collection",

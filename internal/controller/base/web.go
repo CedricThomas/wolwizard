@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/controller"
@@ -23,9 +24,9 @@ type web struct {
 	metricsUsecase metricsusecase.Metrics
 }
 
-func NewWebController(publisher async.Publisher, keystore keystore.Keystore, tokenSrv token.Service, cfg *config.Config, wsManager websocket.Manager) controller.Web {
+func NewWebController(publisher async.Publisher, keystore keystore.Keystore, tokenSrv token.Service, cfg *config.WebConfig, wsManager websocket.Manager) controller.Web {
 	authCtrl := newAuthController(keystore, tokenSrv)
-	metricsUsecase := metricsusecasebase.New(keystore, cfg, wsManager)
+	metricsUsecase := metricsusecasebase.New(keystore, time.Duration(cfg.LastMetricsKeyTTLSeconds)*time.Second, wsManager)
 	return &web{
 		auth:           authCtrl,
 		publisher:      publisher,

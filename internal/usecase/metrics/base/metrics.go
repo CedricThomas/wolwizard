@@ -7,7 +7,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/CedricThomas/console/internal/config"
 	"github.com/CedricThomas/console/internal/domain"
 	"github.com/CedricThomas/console/internal/service/keystore"
 	ws "github.com/CedricThomas/console/internal/service/websocket"
@@ -19,16 +18,16 @@ const (
 )
 
 type metricsUsecase struct {
-	keystore  keystore.Keystore
-	config    *config.Config
-	wsManager ws.Manager
+	lastMetricsKeyTTLSeconds time.Duration
+	keystore                 keystore.Keystore
+	wsManager                ws.Manager
 }
 
-func New(keystore keystore.Keystore, cfg *config.Config, wsManager ws.Manager) metrics.Metrics {
+func New(keystore keystore.Keystore, lastMetricsKeyTTLSeconds time.Duration, wsManager ws.Manager) metrics.Metrics {
 	return &metricsUsecase{
-		keystore:  keystore,
-		config:    cfg,
-		wsManager: wsManager,
+		keystore:                 keystore,
+		lastMetricsKeyTTLSeconds: lastMetricsKeyTTLSeconds,
+		wsManager:                wsManager,
 	}
 }
 
@@ -40,7 +39,7 @@ func (m *metricsUsecase) ProcessMetrics(ctx context.Context, metrics domain.Metr
 	if err != nil {
 		return fmt.Errorf("marshal metrics: %w", err)
 	}
-	if err := m.keystore.SetWithTTL(ctx, metricsKey, string(metricsJSON), time.Duration(m.config.LastMetricsKeyTTLSeconds)*time.Second); err != nil {
+	if err := m.keystore.SetWithTTL(ctx, metricsKey, string(metricsJSON), m.lastMetricsKeyTTLSeconds); err != nil {
 		log.Printf("Error storing metrics: %v", err)
 	}
 

@@ -33,7 +33,7 @@ func main() {
 	ctx := context.Background()
 
 	// Load configuration
-	cfg, err := config.New()
+	cfg, err := config.Init(config.PcAgent)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -74,7 +74,7 @@ func main() {
 	}
 
 	// Initialize controllers
-	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.JWTSecret, cfg.JWTExpirySeconds))
+	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.PcAgentConfig.JWTSecret, cfg.PcAgentConfig.JWTExpirySeconds))
 	pcAgentController := controller.NewPCAgentController(executor, collector, publisher, authCtrl)
 
 	// Register async subscriptions
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	// Register periodic jobs
-	if err := jobs.RegisterPCAgent(ctx, cronService, pcAgentController, cfg); err != nil {
+	if err := jobs.RegisterPCAgent(ctx, cronService, pcAgentController, &cfg.PcAgentConfig); err != nil {
 		log.Fatalf("Failed to register periodic jobs: %v", err)
 	}
 
@@ -109,7 +109,7 @@ func main() {
 	// Register logging middleware
 	httpServer.Use(middleware.LoggerMiddleware())
 
-	listenAddr := "0.0.0.0:" + cfg.Port
+	listenAddr := "0.0.0.0:" + cfg.PcAgentConfig.Port
 	log.Printf("Starting pc-agent web server on %s", listenAddr)
 
 	go func() {

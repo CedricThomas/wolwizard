@@ -18,17 +18,9 @@ func main() {
 	ctx := context.Background()
 
 	// Load configuration
-	cfg, err := config.New()
+	cfg, err := config.Init(config.RaspberryAgent)
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
-	}
-
-	// Validate required configuration
-	if cfg.ServerMACAddress == nil {
-		log.Fatal("Missing required SERVER_MAC_ADDRESS in environment")
-	}
-	if cfg.ServerNetworkAddress == nil {
-		log.Fatal("Missing required SERVER_NETWORK_ADDRESS in environment")
 	}
 
 	// Create Redis client for caching and async operations
@@ -48,7 +40,7 @@ func main() {
 	wolSender := wol.New()
 
 	// Initialize controllers
-	raspberryController := controller.NewRaspberryAgentController(wolSender, cfg)
+	raspberryController := controller.NewRaspberryAgentController(wolSender, &cfg.RaspberryConfig)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterRaspberryAgent(ctx, consumer, raspberryController)

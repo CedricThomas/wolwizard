@@ -13,10 +13,10 @@ import (
 
 type rpAgent struct {
 	wolSender wol.Sender
-	config    *config.Config
+	config    *config.RaspberryAgentConfig
 }
 
-func NewRaspberryAgentController(wolSender wol.Sender, cfg *config.Config) controller.RaspberryAgent {
+func NewRaspberryAgentController(wolSender wol.Sender, cfg *config.RaspberryAgentConfig) controller.RaspberryAgent {
 	return &rpAgent{
 		wolSender: wolSender,
 		config:    cfg,

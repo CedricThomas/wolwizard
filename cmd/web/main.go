@@ -26,7 +26,7 @@ func main() {
 	ctx := context.Background()
 
 	// Load application configuration
-	cfg, err := config.New()
+	cfg, err := config.Init(config.Web)
 	if err != nil {
 		log.Fatalf("Cannot initialize configuration: %v", err)
 	}
@@ -47,7 +47,7 @@ func main() {
 	publisher := redisasync.NewRedisPublisher(redisClient)
 	keystore := rediskeystore.NewRedisKeystore(redisClient)
 	consumer := redisin.NewRedisConsumer(redisClient)
-	tokenService := jwttoken.New(cfg.JWTSecret, cfg.JWTExpirySeconds)
+	tokenService := jwttoken.New(cfg.WebConfig.JWTSecret, cfg.WebConfig.JWTExpirySeconds)
 	wsManager := websocketbase.New()
 
 	// Start WebSocket manager
@@ -55,7 +55,7 @@ func main() {
 	defer wsManager.Shutdown()
 
 	// Initialize the web controller with dependencies
-	webController := controller.NewWebController(publisher, keystore, tokenService, cfg, wsManager)
+	webController := controller.NewWebController(publisher, keystore, tokenService, &cfg.WebConfig, wsManager)
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterWeb(ctx, consumer, webController)
@@ -82,7 +82,7 @@ func main() {
 	router.RegisterWebRoutes(httpServer, webController, wsManager)
 
 	// Start the server on the configured port
-	listenAddr := ":" + cfg.Port
+	listenAddr := ":" + cfg.WebConfig.Port
 	log.Println("Starting web server on", listenAddr)
 	log.Fatal(httpServer.Listen(listenAddr))
 }
