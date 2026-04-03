@@ -33,6 +33,9 @@ go test ./...
 # Run specific test
 go test -run TestFunctionName ./...
 
+# Run test with verbose output
+go test -v -run TestFunctionName ./...
+
 # Test with coverage
 go test -coverprofile=coverage.out ./...
 go tool cover -html=coverage.out
@@ -44,20 +47,12 @@ go mod tidy
 
 ## Mock Generation
 
-Interface packages use `go:generate` directives to automatically generate mocks using [`mockgen`](https://pkg.go.dev/go.uber.org/mock/mockgen).
+Interface packages use `go:generate` directives with [`mockgen`](https://pkg.go.dev/go.uber.org/mock/mockgen).
 
-### Prerequisites
-
-Install `mockgen` once (usually handled by dependabot or CI):
+### Install mockgen (once)
 ```bash
 go install go.uber.org/mock/mockgen@latest
 ```
-
-### When to Generate Mocks
-
-- **After adding new interface methods** - Mocks are out of sync
-- **Before writing unit tests** - Need fresh mocks for testing
-- **After refactoring interfaces** - Update generated code
 
 ### Generate All Mocks
 ```bash
@@ -66,27 +61,13 @@ go generate ./...
 
 ### Generate for Specific Packages
 ```bash
-# Service mocks
-go generate ./internal/service/...
-
-# Use case mocks
-go generate ./internal/usecase/...
-
-# Controller mocks
-go generate ./internal/controller
-
-# Input async mocks
-go generate ./internal/input/async
+go generate ./internal/service/...   # Service mocks
+go generate ./internal/usecase/...    # Use case mocks
+go generate ./internal/controller     # Controller mocks
+go generate ./internal/input/async    # Input async mocks
 ```
 
-### How It Works
-
-Each interface file has a `//go:generate` directive at the top:
-```go
-//go:generate mockgen -source=auth.go -destination=mock/auth.go -package=mock -mock_names=Auth=MockAuth
-```
-
-Running `go generate` executes these directives, updating mock files in each package's `mock/` subdirectory. Mock files are auto-generated and should not be edited manually.
+**Note:** Mock files are in each package's `mock/` subdirectory. Do not edit them manually.
 
 ## Project Structure
 
@@ -97,17 +78,17 @@ internal/
   usecase/         # Business logic interfaces
   usecase/*/base/  # Use case implementations
   service/         # Service interfaces & implementations
-  domain/          # Domain entities
+  domain/          # Domain entities and custom errors
   input/           # Web handlers, async consumers, cron
   config/          # Configuration management
 ```
 
-Follow **Clean Architecture**: controllers depend on usecases, usecases depend on services, services depend on domain.
+**Architecture Rule:** controllers → usecases → services → domain (Clean Architecture)
 
 ## Code Style Guidelines
 
 ### Imports
-Order: standard library, external, local. Separate groups with blank lines:
+Order: standard library, external, local. Separate with blank lines:
 ```go
 import (
     "context"
@@ -123,22 +104,23 @@ import (
 ### Naming Conventions
 - `camelCase`: functions, variables, struct fields
 - `PascalCase`: types, interfaces, exported symbols
-- Interfaces: single verb without `-er` suffix (`Metrics`, `Publisher`, `Keystore`)
-- Implementations: lowercase, same name (`type metrics struct{}`)
+- Interfaces: single verb, no `-er` suffix (`Metrics`, `Publisher`, `Keystore`)
+- Implementations: lowercase same name (`type metrics struct{}`)
 - Constructors: `NewXxx` (public), `newXxx` (private)
-- Embed interfaces to compose: `type web struct{ auth }`
+- Embed interfaces for composition: `type web struct{ auth }`
 
 ### Types & Structs
 - Private fields in `base` packages
 - Use struct tags for JSON/env parsing
 - Domain types live only in `internal/domain/`
+- Custom errors defined in domain packages (`ErrGRUBEntryNotFound`)
 
 ```go
 type Config struct {
-    RedisURL     string `env:"REDIS_URL,required"`
-    JWTSecret    string `env:"JWT_SECRET"`
-    Port         string `env:"PORT" envDefault:"3000"`
-    MACAddress   net.HardwareAddr `env:"-"`
+    RedisURL   string             `env:"REDIS_URL,required"`
+    JWTSecret  string             `env:"JWT_SECRET"`
+    Port       string             `env:"PORT" envDefault:"3000"`
+    MACAddress net.HardwareAddr   `env:"-"`
 }
 ```
 
@@ -154,7 +136,7 @@ func (w web) SendAsyncBootCommand(ctx context.Context, osName domain.OSName) err
 }
 ```
 
-### Validation
+### Request Validation
 Add `Validate()` methods to request structs:
 ```go
 type LoginRequest struct {
@@ -194,7 +176,7 @@ func LoggerMiddleware() fiber.Handler {
 - JWT tokens: `github.com/golang-jwt/jwt/v5`
 
 ### WebSocket
-- Use `github.com/gofiber/contrib/websocket` for WS connections
+- Use `github.com/fasthttp/websocket` for WS connections
 - Manager interface handles connections per client
 
 ## Key Dependencies
@@ -204,6 +186,8 @@ func LoggerMiddleware() fiber.Handler {
 - `golang.org/x/crypto` - bcrypt
 - `github.com/caarlos0/env/v11` - Environment config
 - `github.com/robfig/cron/v3` - Cron scheduling
+- `github.com/stretchr/testify` - Testing
+- `go.uber.org/mock` - Mock generation
 
 ## Running
 ```bash
@@ -211,9 +195,11 @@ docker compose up -d
 ```
 
 ## Rules
-- Always rebuild Docker containers after completing tasks:
+- **After completing tasks, rebuild Docker:**
   ```bash
   docker compose build --no-cache
   docker compose up --watch
   ```
-}
+- Generate mocks after adding interface methods
+- Wrap all errors with context (`fmt.Errorf("msg: %w", err)`)
+- First parameter of methods should be `context.Context`
