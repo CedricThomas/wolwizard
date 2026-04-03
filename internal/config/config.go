@@ -36,6 +36,7 @@ type PcAgentConfig struct {
 	JWTExpirySeconds         int    `env:"JWT_EXPIRY_SECONDS" envDefault:"86400"`
 	MetricsReportingSchedule string `env:"METRICS_REPORTING_SCHEDULE" envDefault:"@every 5s"`
 	LastMetricsKeyTTLSeconds int    `env:"LAST_METRICS_KEY_TTL_SECONDS" envDefault:"5"`
+	BootOSTTLSeconds         int    `env:"BOOT_OS_TTL_SECONDS" envDefault:"300"`
 }
 
 type RaspberryAgentConfig struct {

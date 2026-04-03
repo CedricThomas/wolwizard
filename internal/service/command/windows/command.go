@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 
+	"github.com/CedricThomas/console/internal/domain"
 	"github.com/CedricThomas/console/internal/service/command"
 )
 
@@ -23,4 +24,19 @@ func (e *executor) Shutdown(ctx context.Context) error {
 		return fmt.Errorf("shutdown: %w", err)
 	}
 	return nil
+}
+
+// SetGrubReboot does not support GRUB on Windows
+func (e *executor) SetGrubReboot(ctx context.Context, entryName string) error {
+	return &command.ErrUnsupportedOS{}
+}
+
+// Reboot does not use GRUB on Windows
+func (e *executor) Reboot(ctx context.Context) error {
+	return &command.ErrUnsupportedOS{}
+}
+
+// ListGrubEntries does not support GRUB on Windows
+func (e *executor) ListGrubEntries(ctx context.Context) ([]domain.BootEntry, error) {
+	return nil, &command.ErrUnsupportedOS{}
 }
