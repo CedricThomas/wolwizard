@@ -1,0 +1,20 @@
+[Unit]
+Description=console pc-agent
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/bin
+ExecStart=/usr/bin/pc-agent
+Environment="REDIS_URL=redis://user:mypassword@localhost:6379/0"
+Environment="JWT_SECRET=a_secret_key_minimum_32_chars_long"
+Environment="PORT=8081"
+Environment="METRICS_REPORTING_SCHEDULE=@every 5s"
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
