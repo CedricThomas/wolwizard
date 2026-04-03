@@ -71,32 +71,18 @@ func (mr *MockBootMockRecorder) ListGrubEntries(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGrubEntries", reflect.TypeOf((*MockBoot)(nil).ListGrubEntries), ctx)
 }
 
-// MatchAndRebootToOS mocks base method.
-func (m *MockBoot) MatchAndRebootToOS(ctx context.Context, osName domain.OSName) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MatchAndRebootToOS", ctx, osName)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// MatchAndRebootToOS indicates an expected call of MatchAndRebootToOS.
-func (mr *MockBootMockRecorder) MatchAndRebootToOS(ctx, osName any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MatchAndRebootToOS", reflect.TypeOf((*MockBoot)(nil).MatchAndRebootToOS), ctx, osName)
-}
-
 // RebootToOS mocks base method.
-func (m *MockBoot) RebootToOS(ctx context.Context) error {
+func (m *MockBoot) RebootToOS(ctx context.Context, osName domain.OSName) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RebootToOS", ctx)
+	ret := m.ctrl.Call(m, "RebootToOS", ctx, osName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RebootToOS indicates an expected call of RebootToOS.
-func (mr *MockBootMockRecorder) RebootToOS(ctx any) *gomock.Call {
+func (mr *MockBootMockRecorder) RebootToOS(ctx, osName any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebootToOS", reflect.TypeOf((*MockBoot)(nil).RebootToOS), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebootToOS", reflect.TypeOf((*MockBoot)(nil).RebootToOS), ctx, osName)
 }
 
 // StoreBootOS mocks base method.

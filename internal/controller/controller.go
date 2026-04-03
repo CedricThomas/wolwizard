@@ -36,4 +36,5 @@ type PCAgent interface {
 	Register
 	ShutdownCurrentHost(ctx context.Context) error
 	SendCurrentHostAsyncMetrics(ctx context.Context) error
+	ProcessPendingBootCommand(ctx context.Context) error
 }

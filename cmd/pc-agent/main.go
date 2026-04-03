@@ -26,6 +26,8 @@ import (
 	metricswindows "github.com/CedricThomas/console/internal/service/metrics/windows"
 	"github.com/CedricThomas/console/internal/service/token/jwt"
 	"github.com/CedricThomas/console/internal/usecase/auth/base"
+	"github.com/CedricThomas/console/internal/usecase/boot"
+	bootbase "github.com/CedricThomas/console/internal/usecase/boot/base"
 	"github.com/gofiber/fiber/v3"
 )
 
@@ -62,6 +64,8 @@ func main() {
 	// Initialize command executor and metrics collector based on the OS
 	var executor command.CommandExecutor
 	var collector metrics.Collector
+	var bootUseCase boot.Boot
+
 	switch runtime.GOOS {
 	case "linux":
 		collector = metricslinux.New()
@@ -69,13 +73,22 @@ func main() {
 	case "windows":
 		executor = windows.New()
 		collector = metricswindows.New()
+		bootUseCase = nil
 	default:
 		log.Fatalf("Unsupported operating system: %s", runtime.GOOS)
 	}
+	bootUseCase = bootbase.New(rediskeystore.NewRedisKeystore(redisClient), executor, cfg.PcAgentConfig.BootOSTTLSeconds)
 
 	// Initialize controllers
 	authCtrl := base.New(rediskeystore.NewRedisKeystore(redisClient), jwt.New(cfg.PcAgentConfig.JWTSecret, cfg.PcAgentConfig.JWTExpirySeconds))
-	pcAgentController := controller.NewPCAgentController(executor, collector, publisher, authCtrl)
+	pcAgentController := controller.NewPCAgentController(executor, collector, publisher, authCtrl, bootUseCase)
+
+	// Check for pending boot command at startup (Linux only)
+	if runtime.GOOS == "linux" {
+		if err := pcAgentController.ProcessPendingBootCommand(ctx); err != nil {
+			log.Printf("Boot command check failed: %v", err)
+		}
+	}
 
 	// Register async subscriptions
 	unsubscribes, err := subscriptions.RegisterPCAgent(ctx, consumer, pcAgentController)

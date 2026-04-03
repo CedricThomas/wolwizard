@@ -42,19 +42,15 @@ func (b *bootUsecase) GetBootOS(ctx context.Context) (domain.OSName, error) {
 	return domain.OSName(val), nil
 }
 
-func (b *bootUsecase) RebootToOS(ctx context.Context) error {
-	osName, err := b.GetBootOS(ctx)
-	if err != nil {
-		return err
-	}
+func (b *bootUsecase) RebootToOS(ctx context.Context, osName domain.OSName) error {
 	entryName, err := b.matchGrubEntryToOS(osName)
 	if err != nil {
 		return fmt.Errorf("match GRUB entry: %w", err)
 	}
 	if err := b.cmdExec.SetGrubReboot(ctx, entryName); err != nil {
-		var unsupported *domain.ErrUnsupportedOS
+		var unsupported *command.ErrUnsupportedOS
 		if errors.As(err, &unsupported) {
-			return &domain.ErrUnsupportedOS{}
+			return &command.ErrUnsupportedOS{}
 		}
 		return fmt.Errorf("set grub reboot: %w", err)
 	}
@@ -63,21 +59,6 @@ func (b *bootUsecase) RebootToOS(ctx context.Context) error {
 
 func (b *bootUsecase) ListGrubEntries(ctx context.Context) ([]domain.BootEntry, error) {
 	return b.cmdExec.ListGrubEntries(ctx)
-}
-
-func (b *bootUsecase) MatchAndRebootToOS(ctx context.Context, osName domain.OSName) error {
-	entryName, err := b.matchGrubEntryToOS(osName)
-	if err != nil {
-		return err
-	}
-	if err := b.cmdExec.SetGrubReboot(ctx, entryName); err != nil {
-		var unsupported *domain.ErrUnsupportedOS
-		if errors.As(err, &unsupported) {
-			return &domain.ErrUnsupportedOS{}
-		}
-		return fmt.Errorf("set grub reboot: %w", err)
-	}
-	return b.cmdExec.Reboot(ctx)
 }
 
 func (b *bootUsecase) matchGrubEntryToOS(osName domain.OSName) (string, error) {

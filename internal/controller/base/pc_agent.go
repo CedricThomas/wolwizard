@@ -11,6 +11,7 @@ import (
 	"github.com/CedricThomas/console/internal/service/async"
 	"github.com/CedricThomas/console/internal/service/command"
 	"github.com/CedricThomas/console/internal/service/metrics"
+	"github.com/CedricThomas/console/internal/usecase/boot"
 )
 
 type pcAgent struct {
@@ -18,14 +19,22 @@ type pcAgent struct {
 	publisher async.Publisher
 	collector metrics.Collector
 	auth      controller.Auth
+	boot      boot.Boot
 }
 
-func NewPCAgentController(executor command.CommandExecutor, collector metrics.Collector, publisher async.Publisher, authCtrl controller.Auth) controller.PCAgent {
+func NewPCAgentController(
+	executor command.CommandExecutor,
+	collector metrics.Collector,
+	publisher async.Publisher,
+	authCtrl controller.Auth,
+	bootCtrl boot.Boot,
+) controller.PCAgent {
 	return &pcAgent{
 		executor:  executor,
 		collector: collector,
 		publisher: publisher,
 		auth:      authCtrl,
+		boot:      bootCtrl,
 	}
 }
 
@@ -52,5 +61,21 @@ func (pa *pcAgent) SendCurrentHostAsyncMetrics(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("send async metrics: %w", err)
 	}
+	return nil
+}
+
+func (pa *pcAgent) ProcessPendingBootCommand(ctx context.Context) error {
+	osName, err := pa.boot.GetBootOS(ctx)
+	if err != nil {
+		if err.Error() == "no target OS stored" || osName == "" {
+			return nil
+		}
+		return fmt.Errorf("get boot OS: %w", err)
+	}
+
+	if err := pa.boot.RebootToOS(ctx, osName); err != nil {
+		return fmt.Errorf("reboot to OS: %w", err)
+	}
+
 	return nil
 }

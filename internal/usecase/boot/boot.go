@@ -10,7 +10,6 @@ import (
 type Boot interface {
 	StoreBootOS(ctx context.Context, osName domain.OSName) error
 	GetBootOS(ctx context.Context) (domain.OSName, error)
-	RebootToOS(ctx context.Context) error
+	RebootToOS(ctx context.Context, osName domain.OSName) error
 	ListGrubEntries(ctx context.Context) ([]domain.BootEntry, error)
-	MatchAndRebootToOS(ctx context.Context, osName domain.OSName) error
 }

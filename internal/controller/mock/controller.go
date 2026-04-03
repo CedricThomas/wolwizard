@@ -423,6 +423,20 @@ func (mr *MockPCAgentMockRecorder) CreateAccount(ctx, username, password any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAccount", reflect.TypeOf((*MockPCAgent)(nil).CreateAccount), ctx, username, password)
 }
 
+// ProcessPendingBootCommand mocks base method.
+func (m *MockPCAgent) ProcessPendingBootCommand(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ProcessPendingBootCommand", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ProcessPendingBootCommand indicates an expected call of ProcessPendingBootCommand.
+func (mr *MockPCAgentMockRecorder) ProcessPendingBootCommand(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessPendingBootCommand", reflect.TypeOf((*MockPCAgent)(nil).ProcessPendingBootCommand), ctx)
+}
+
 // SendCurrentHostAsyncMetrics mocks base method.
 func (m *MockPCAgent) SendCurrentHostAsyncMetrics(ctx context.Context) error {
 	m.ctrl.T.Helper()
